@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WooDash Pro v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--bg:#0a0a0b;--surface:#131315;--surface2:#1a1a1d;--surface3:#222225;--border:#2a2a2e;--border2:#35353a;--accent:#f59e0b;--accent2:#fbbf24;--accent-dim:rgba(245,158,11,.1);--green:#10b981;--green-dim:rgba(16,185,129,.1);--red:#ef4444;--red-dim:rgba(239,68,68,.08);--blue:#3b82f6;--blue-dim:rgba(59,130,246,.1);--purple:#8b5cf6;--purple-dim:rgba(139,92,246,.1);--cyan:#06b6d4;--text:#f0f0f0;--text2:#8a8a8a;--text3:#555;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;--display:'Syne',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* SETUP */
+#setup-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative}
+#setup-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(245,158,11,.06) 0%,transparent 70%);pointer-events:none}
+.setup-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:560px;position:relative}
+.setup-logo{font-family:var(--display);font-size:1.8rem;font-weight:800;color:var(--accent);margin-bottom:.2rem}
+.setup-subtitle{color:var(--text2);font-size:.85rem;margin-bottom:2rem}
+.setup-section{margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.setup-section-title{font-family:var(--display);font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:.15rem}
+.setup-section-desc{font-size:.72rem;color:var(--text2);margin-bottom:1rem}
+.field-group{margin-bottom:1rem}
+label{display:block;font-size:.7rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem}
+input[type="text"],input[type="password"],input[type="number"],input[type="date"]{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.65rem .9rem;color:var(--text);font-family:var(--mono);font-size:.8rem;outline:none;transition:border-color .2s}
+input:focus{border-color:var(--accent)}input::placeholder{color:var(--text3)}
+.btn-connect{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;padding:.85rem;font-family:var(--display);font-size:.92rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:.5rem}
+.btn-connect:hover{background:var(--accent2)}
+.btn-sm{padding:.45rem .85rem;font-size:.75rem;border-radius:6px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .15s}
+.btn-accent{background:var(--accent);color:#000}.btn-accent:hover{background:var(--accent2)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-google{background:#4285f4;color:#fff;display:inline-flex;align-items:center;gap:.4rem}.btn-google:hover{background:#3367d6}
+.error-msg{color:var(--red);font-size:.78rem;margin-top:.7rem;display:none;padding:.5rem .8rem;background:var(--red-dim);border-radius:6px;border:1px solid rgba(239,68,68,.2)}
+.success-msg{color:var(--green);font-size:.78rem;padding:.5rem .8rem;background:var(--green-dim);border-radius:6px;border:1px solid rgba(16,185,129,.2);margin-top:.5rem}
+.optional-badge{font-size:.6rem;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:.3rem}
+
+/* DASHBOARD */
+#dashboard{display:none}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.25rem;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.logo{font-family:var(--display);font-size:1.1rem;font-weight:800;color:var(--accent)}
+.site-badge{font-family:var(--mono);font-size:.7rem;color:var(--text2);background:var(--surface2);padding:.2rem .55rem;border-radius:20px;border:1px solid var(--border)}
+.topbar-right{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.refresh-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:.3rem .65rem;border-radius:5px;font-size:.72rem;cursor:pointer;font-family:var(--sans);transition:all .2s;display:flex;align-items:center;gap:.3rem}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
+.disconnect-btn{background:none;border:none;color:var(--text3);font-size:.7rem;cursor:pointer;font-family:var(--sans)}.disconnect-btn:hover{color:var(--red)}
+.ga-status{font-size:.65rem;padding:.2rem .5rem;border-radius:10px;font-weight:600}
+.ga-connected{background:var(--green-dim);color:var(--green)}.ga-disconnected{background:var(--red-dim);color:var(--red);cursor:pointer}
+
+/* DATE RANGE */
+.date-controls{display:flex;align-items:center;gap:.35rem}
+.date-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:.25rem .5rem;border-radius:4px;font-size:.68rem;cursor:pointer;font-family:var(--mono);transition:all .15s}
+.date-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.date-input{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:.2rem .4rem;color:var(--text);font-family:var(--mono);font-size:.68rem;width:110px;outline:none}
+.date-input:focus{border-color:var(--accent)}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 1.25rem;background:var(--surface);overflow-x:auto}
+.tab{padding:.7rem .9rem;font-size:.76rem;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}.tab:hover:not(.active){color:var(--text)}
+.main{padding:1.25rem;max-width:1440px;margin:0 auto}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem;margin-bottom:1.25rem}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.85rem 1rem;position:relative;transition:border-color .2s}
+.kpi-card:hover{border-color:var(--border2)}
+.kpi-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);font-weight:500;margin-bottom:.4rem}
+.kpi-value{font-family:var(--display);font-size:1.45rem;font-weight:800;color:var(--text);line-height:1;margin-bottom:.25rem;letter-spacing:-1px}
+.kpi-sub{font-size:.68rem;color:var(--text2)}
+.kpi-accent{color:var(--accent)}.kpi-green{color:var(--green)}.kpi-red{color:var(--red)}.kpi-blue{color:var(--blue)}.kpi-purple{color:var(--purple)}.kpi-cyan{color:var(--cyan)}
+.kpi-icon{position:absolute;top:.85rem;right:.85rem;font-size:.95rem;opacity:.3}
+.kpi-trend{display:inline-flex;align-items:center;gap:2px;font-size:.65rem;font-weight:600;padding:1px 4px;border-radius:3px}
+.kpi-trend.up{color:var(--green);background:var(--green-dim)}.kpi-trend.down{color:var(--red);background:var(--red-dim)}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:.75rem}
+.card-header{padding:.85rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+.card-title{font-family:var(--display);font-size:.85rem;font-weight:700;letter-spacing:-.3px}
+.card-body{padding:1rem}
+.card-action{font-size:.7rem;color:var(--accent);cursor:pointer;background:none;border:none;font-family:var(--sans)}.card-action:hover{text-decoration:underline}
+
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.75rem}
+.charts-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:.75rem}
+.chart-wrap{position:relative;height:190px}
+
+/* FUNNEL */
+.funnel{display:flex;gap:2px;align-items:flex-end;padding:.75rem 0}
+.funnel-step{flex:1;text-align:center}
+.funnel-bar{margin:0 auto;border-radius:5px 5px 0 0;transition:height .5s;min-height:3px}
+.funnel-value{font-family:var(--display);font-size:1rem;font-weight:700;margin-top:.4rem}
+.funnel-label{font-size:.68rem;color:var(--text2);margin-top:.15rem}
+.funnel-pct{font-size:.62rem;color:var(--accent);font-weight:600;margin-top:.1rem}
+.funnel-arrow{font-size:.65rem;color:var(--text3);margin:0 2px}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:.55rem .85rem;border-bottom:1px solid var(--border);font-weight:500}
+td{padding:.6rem .85rem;font-size:.78rem;border-bottom:1px solid rgba(42,42,42,.35);vertical-align:middle}
+tr:last-child td{border-bottom:none}tr:hover td{background:var(--surface2)}
+.order-id{font-family:var(--mono);font-size:.74rem;color:var(--accent)}
+.status-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.12rem .5rem;border-radius:20px;font-size:.65rem;font-weight:600;white-space:nowrap}
+.status-badge::before{content:'●';font-size:.4rem}
+.s-processing{background:var(--blue-dim);color:var(--blue)}.s-completed{background:var(--green-dim);color:var(--green)}.s-pending{background:var(--accent-dim);color:var(--accent)}.s-cancelled,.s-failed{background:var(--red-dim);color:var(--red)}.s-on-hold{background:var(--purple-dim);color:var(--purple)}.s-refunded{background:rgba(107,114,128,.1);color:#6b7280}
+.amount{font-family:var(--mono);font-size:.78rem}.amount.hi{color:var(--accent)}
+
+/* FILTERS */
+.toolbar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.search-input{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:.4rem .65rem;color:var(--text);font-family:var(--sans);font-size:.75rem;width:170px;outline:none}
+.search-input:focus{border-color:var(--accent)}.search-input::placeholder{color:var(--text3)}
+.pill-filter{display:flex;gap:.25rem;flex-wrap:wrap}
+.pill{padding:.2rem .55rem;border-radius:20px;font-size:.66rem;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .15s}
+.pill.active,.pill:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+select{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:.35rem .5rem;color:var(--text);font-family:var(--sans);font-size:.72rem;outline:none;cursor:pointer}select:focus{border-color:var(--accent)}
+
+/* PRODUCT ROWS */
+.product-row{display:flex;align-items:center;gap:.75rem;padding:.5rem 1rem;border-bottom:1px solid rgba(42,42,42,.3);transition:background .15s}.product-row:hover{background:var(--surface2)}.product-row:last-child{border-bottom:none}
+.product-rank{font-family:var(--mono);font-size:.68rem;color:var(--text3);width:22px;text-align:right}
+.product-img{width:32px;height:32px;border-radius:5px;object-fit:cover;background:var(--surface3);flex-shrink:0}
+.product-info{flex:1;min-width:0}.product-name{font-size:.78rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product-meta{font-size:.65rem;color:var(--text2);margin-top:.1rem}
+.product-bar-wrap{width:100px;flex-shrink:0}.product-bar-bg{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}.product-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .5s}
+.product-qty{font-family:var(--mono);font-size:.76rem;color:var(--accent);width:55px;text-align:right}.product-qty small{color:var(--text3);font-size:.62rem;display:block}
+
+/* CUSTOMERS */
+.customers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.6rem}
+.customer-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.85rem;transition:border-color .2s}.customer-card:hover{border-color:var(--border2)}
+.customer-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:.72rem;margin-bottom:.5rem}
+.c-name{font-weight:600;font-size:.8rem}.c-email{font-size:.65rem;color:var(--text2);margin-top:.1rem}
+.c-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.6rem;padding-top:.55rem;border-top:1px solid var(--border)}
+.c-stat-label{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}.c-stat-value{font-family:var(--mono);font-size:.75rem;font-weight:500;margin-top:.1rem}
+
+/* PROFIT */
+.profit-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-bottom:.75rem}
+.profit-box{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:.65rem .85rem}
+.profit-box .label{font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.07em}
+.profit-box .value{font-family:var(--display);font-size:1.2rem;font-weight:700;margin-top:.2rem}
+.inline-edit{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:.18rem .35rem;color:var(--accent);font-family:var(--mono);font-size:.72rem;width:75px;outline:none;text-align:right}.inline-edit:focus{border-color:var(--accent)}
+.badge-type{display:inline-block;padding:.1rem .35rem;border-radius:3px;font-size:.6rem;font-weight:600;text-transform:uppercase;background:var(--surface3);color:var(--text2)}
+
+/* ADS SPEND TABLE */
+.ads-table input{width:90px}
+.ads-total{font-weight:700;color:var(--accent);font-family:var(--mono)}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:center;gap:.25rem;padding:.6rem}
+.page-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:.25rem .5rem;border-radius:4px;font-size:.7rem;cursor:pointer;font-family:var(--mono)}
+.page-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}.page-btn:disabled{opacity:.3;cursor:default}
+.page-info{font-size:.68rem;color:var(--text3);margin:0 .25rem}
+
+/* MISC */
+.empty{padding:1.5rem;text-align:center;color:var(--text3);font-size:.8rem}
+.loading{padding:1.5rem;text-align:center;color:var(--text2);font-size:.8rem}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:.3rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.flex-between{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
+.mb-sm{margin-bottom:.6rem}.mb-md{margin-bottom:1rem}
+.text-muted{color:var(--text2);font-size:.78rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.hint{font-size:.68rem;color:var(--text3);margin-top:.2rem}
+
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.charts-grid,.charts-grid-3,.grid-2{grid-template-columns:1fr}.main{padding:.85rem}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr 1fr}.topbar-right{gap:.3rem}.date-controls{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP ═══ -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo">🛒 WooDash Pro</div>
+    <div class="setup-subtitle">Dashboard quản lý & tối ưu store WooCommerce</div>
+
+    <div class="field-group"><label>URL Website WooCommerce</label><input type="text" id="input-url" placeholder="https://yourstore.com"></div>
+    <div class="field-group"><label>Consumer Key</label><input type="text" id="input-ck" placeholder="ck_xxxxxxxxxxxxxxxx"></div>
+    <div class="field-group"><label>Consumer Secret</label><input type="password" id="input-cs" placeholder="cs_xxxxxxxxxxxxxxxx"></div>
+
+    <div class="setup-section">
+      <div class="setup-section-title">📊 Google Analytics 4 <span class="optional-badge">(tùy chọn)</span></div>
+      <div class="setup-section-desc">Kết nối GA4 để lấy Sessions, Add to Cart, Bounce Rate, Traffic Sources tự động</div>
+      <div class="field-group"><label>GA4 Property ID</label><input type="text" id="input-ga-property" placeholder="properties/123456789"></div>
+      <div class="field-group"><label>Google OAuth Client ID</label><input type="text" id="input-ga-client" placeholder="xxxxx.apps.googleusercontent.com"></div>
+      <div class="hint">Tạo tại <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent)">Google Cloud Console</a> → Enable "Google Analytics Data API" → Tạo OAuth 2.0 Client ID (Web)</div>
+    </div>
+
+    <button class="btn-connect" onclick="connect()">Kết nối Dashboard →</button>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <div class="logo">🛒 WooDash Pro</div>
+      <div class="site-badge" id="site-badge">–</div>
+      <span class="ga-status ga-disconnected" id="ga-badge" onclick="connectGA()" style="display:none" title="Click để kết nối GA4">GA4 ✕</span>
+    </div>
+    <div class="topbar-right">
+      <div class="date-controls">
+        <button class="date-btn" onclick="setRange('today',this)">Hôm nay</button>
+        <button class="date-btn active" onclick="setRange('7d',this)">7N</button>
+        <button class="date-btn" onclick="setRange('30d',this)">30N</button>
+        <button class="date-btn" onclick="setRange('90d',this)">90N</button>
+        <button class="date-btn" onclick="setRange('all',this)">Tất cả</button>
+        <span style="color:var(--text3);font-size:.7rem">|</span>
+        <input type="date" class="date-input" id="date-from" onchange="setCustomRange()">
+        <span style="color:var(--text3);font-size:.68rem">→</span>
+        <input type="date" class="date-input" id="date-to" onchange="setCustomRange()">
+      </div>
+      <button class="refresh-btn" onclick="refreshAll()">↻</button>
+      <button class="disconnect-btn" onclick="disconnect()">✕</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="main-tabs">
+    <div class="tab active" onclick="switchTab('overview')">Tổng quan</div>
+    <div class="tab" onclick="switchTab('orders')">Đơn hàng</div>
+    <div class="tab" onclick="switchTab('products')">Sản phẩm</div>
+    <div class="tab" onclick="switchTab('customers')">Khách hàng</div>
+    <div class="tab" onclick="switchTab('conversion')">Chuyển đổi</div>
+    <div class="tab" onclick="switchTab('profit')">Lợi nhuận</div>
+  </div>
+
+  <div class="main">
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <div class="tab-pane active" id="tab-overview">
+      <div class="kpi-grid" id="kpi-overview"></div>
+      <div class="charts-grid">
+        <div class="card"><div class="card-header"><div class="card-title">Doanh thu theo ngày</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-revenue"></canvas></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Đơn hàng theo ngày</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-orders-daily"></canvas></div></div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="card"><div class="card-header"><div class="card-title">Trạng thái đơn hàng</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-status"></canvas></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Top 5 sản phẩm</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-top5"></canvas></div></div></div>
+      </div>
+      <div class="card" id="ga-overview-section" style="display:none">
+        <div class="card-header"><div class="card-title">📊 Google Analytics 4</div></div>
+        <div class="card-body"><div class="kpi-grid" id="kpi-ga"></div></div>
+      </div>
+      <div class="card"><div class="card-header"><div class="card-title">Đơn hàng gần đây</div><button class="card-action" onclick="switchTab('orders')">Xem tất cả →</button></div><div id="recent-orders"></div></div>
+    </div>
+
+    <!-- ═══ ORDERS ═══ -->
+    <div class="tab-pane" id="tab-orders">
+      <div class="card"><div class="card-header"><div class="card-title">Đơn hàng</div><div class="toolbar"><input class="search-input" type="text" id="order-search" placeholder="🔍 Mã đơn, tên KH..." oninput="filterOrders()"><div class="pill-filter"><span class="pill active" onclick="filterStatus('all',this)">Tất cả</span><span class="pill" onclick="filterStatus('processing',this)">Đang xử lý</span><span class="pill" onclick="filterStatus('completed',this)">Hoàn thành</span><span class="pill" onclick="filterStatus('pending',this)">Chờ</span><span class="pill" onclick="filterStatus('cancelled',this)">Hủy</span></div></div></div><div id="orders-table"></div><div class="pagination" id="orders-pag"></div></div>
+    </div>
+
+    <!-- ═══ PRODUCTS ═══ -->
+    <div class="tab-pane" id="tab-products">
+      <div class="kpi-grid" id="kpi-products"></div>
+      <div class="card"><div class="card-header"><div class="card-title">Top 10 bán chạy</div></div><div id="top-sellers"></div></div>
+      <div class="card" style="margin-top:.6rem"><div class="card-header"><div class="card-title">Tất cả sản phẩm</div><div class="toolbar"><input class="search-input" type="text" id="prod-search" placeholder="🔍 Tìm SP..." oninput="filterProducts()"><select id="prod-type" onchange="filterProducts()"><option value="all">Tất cả loại</option><option value="simple">Simple</option><option value="variable">Variable</option><option value="grouped">Grouped</option><option value="external">External</option></select><select id="prod-status" onchange="filterProducts()"><option value="all">Tất cả</option><option value="publish">Đang bán</option><option value="draft">Nháp</option></select></div></div><div id="products-table"></div><div class="pagination" id="prod-pag"></div></div>
+    </div>
+
+    <!-- ═══ CUSTOMERS ═══ -->
+    <div class="tab-pane" id="tab-customers">
+      <div class="kpi-grid" id="kpi-customers"></div>
+      <div class="mb-sm"><input class="search-input" type="text" id="cust-search" placeholder="🔍 Tìm khách hàng..." oninput="filterCustomers()" style="width:240px"></div>
+      <div class="customers-grid" id="cust-grid"></div>
+    </div>
+
+    <!-- ═══ CONVERSION ═══ -->
+    <div class="tab-pane" id="tab-conversion">
+      <div id="ga-conv-notice" class="mb-md">
+        <p class="text-muted mb-sm">Dữ liệu phễu chuyển đổi từ GA4 (nếu đã kết nối) hoặc nhập thủ công.</p>
+        <div class="toolbar mb-sm" id="manual-conv-inputs">
+          <label style="font-size:.72rem;margin:0">Sessions:</label>
+          <input type="number" class="inline-edit" id="in-sessions" placeholder="0" style="width:90px" oninput="calcConv()">
+          <label style="font-size:.72rem;margin:0">Add to Cart:</label>
+          <input type="number" class="inline-edit" id="in-atc" placeholder="0" style="width:90px" oninput="calcConv()">
+          <button class="btn-sm btn-accent" onclick="saveConvInputs()">Lưu</button>
+        </div>
+      </div>
+      <div class="kpi-grid" id="kpi-conv"></div>
+      <div class="card"><div class="card-header"><div class="card-title">Phễu chuyển đổi</div></div><div class="card-body"><div class="funnel" id="conv-funnel"></div></div></div>
+      <div class="charts-grid" style="margin-top:.6rem">
+        <div class="card"><div class="card-header"><div class="card-title">Tỷ lệ chuyển đổi theo ngày</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-cr"></canvas></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Đơn hàng theo giờ</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-hourly"></canvas></div></div></div>
+      </div>
+      <div class="card" id="ga-traffic-card" style="display:none;margin-top:.6rem"><div class="card-header"><div class="card-title">📊 Nguồn traffic (GA4)</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-traffic"></canvas></div></div></div>
+    </div>
+
+    <!-- ═══ PROFIT ═══ -->
+    <div class="tab-pane" id="tab-profit">
+      <div class="profit-summary" id="profit-kpis"></div>
+
+      <div class="grid-2 mb-md">
+        <div class="card"><div class="card-header"><div class="card-title">Chi phí Ads theo ngày</div><button class="btn-sm btn-accent" onclick="saveAllAds()">Lưu tất cả</button></div><div class="card-body" id="ads-daily-wrap" style="max-height:300px;overflow-y:auto"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Cost mặc định theo Product Type</div><button class="btn-sm btn-accent" onclick="saveTypeCosts()">Lưu</button></div><div class="card-body" id="type-cost-wrap"></div></div>
+      </div>
+
+      <div class="card mb-md"><div class="card-header"><div class="card-title">Giá vốn sản phẩm (COGS)</div><div class="hint">Nhập Cost cho từng SP → nhấn Enter. SP chưa có Cost sẽ dùng Cost theo Product Type.</div></div><div id="cogs-table"></div></div>
+
+      <div class="charts-grid">
+        <div class="card"><div class="card-header"><div class="card-title">Cơ cấu chi phí</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-profit-pie"></canvas></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Revenue vs Cost vs Profit</div></div><div class="card-body"><div class="chart-wrap"><canvas id="ch-cost-rev"></canvas></div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let API_URL='',CK='',CS='';
+let GA_PROPERTY='',GA_CLIENT='',GA_TOKEN='';
+let allOrders=[],allCustomers=[],allProducts=[];
+let gaData=null;
+let dateRange='7d',customFrom='',customTo='';
+let statusFilter='all',orderPage=1,prodPage=1;
+const PG=20;
+let cogsData={},typeCosts={},dailyAds={},convInputs={sessions:0,atc:0};
+let charts={};
+
+// ═══════════════════════════════════════════
+// SETUP & CONNECTION
+// ═══════════════════════════════════════════
+function showError(m){const e=document.getElementById('error-msg');e.textContent=m;e.style.display='block';}
+
+async function connect(){
+  const url=document.getElementById('input-url').value.trim().replace(/\/$/,'');
+  const ck=document.getElementById('input-ck').value.trim();
+  const cs=document.getElementById('input-cs').value.trim();
+  if(!url||!ck||!cs){showError('Điền đầy đủ URL, Consumer Key và Secret.');return;}
+  document.querySelector('.btn-connect').textContent='Đang kết nối...';
+  document.getElementById('error-msg').style.display='none';
+  API_URL=url;CK=ck;CS=cs;
+  GA_PROPERTY=document.getElementById('input-ga-property').value.trim();
+  GA_CLIENT=document.getElementById('input-ga-client').value.trim();
+  try{
+    await wooFetch('/wp-json/wc/v3/orders?per_page=1');
+    ['woo_url','woo_ck','woo_cs','ga_property','ga_client'].forEach((k,i)=>sessionStorage.setItem(k,[url,ck,cs,GA_PROPERTY,GA_CLIENT][i]));
+    loadLocal();
+    document.getElementById('site-badge').textContent=new URL(url).hostname;
+    document.getElementById('setup-screen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    initDateInputs();
+    if(GA_PROPERTY&&GA_CLIENT){document.getElementById('ga-badge').style.display='inline';connectGA();}
+    loadAll();
+  }catch(e){showError('Kết nối thất bại: '+(e.message||'Kiểm tra URL/API key'));document.querySelector('.btn-connect').textContent='Kết nối Dashboard →';}
+}
+
+function disconnect(){sessionStorage.clear();allOrders=[];allCustomers=[];allProducts=[];gaData=null;document.getElementById('dashboard').style.display='none';document.getElementById('setup-screen').style.display='flex';document.querySelector('.btn-connect').textContent='Kết nối Dashboard →';}
+
+// ═══════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════
+function storeKey(){return 'wd2_'+(API_URL?new URL(API_URL).hostname:'');}
+function loadLocal(){try{const k=storeKey();cogsData=JSON.parse(localStorage.getItem(k+'_cogs')||'{}');typeCosts=JSON.parse(localStorage.getItem(k+'_tcost')||'{}');dailyAds=JSON.parse(localStorage.getItem(k+'_ads')||'{}');convInputs=JSON.parse(localStorage.getItem(k+'_conv')||'{"sessions":0,"atc":0}');}catch(e){cogsData={};typeCosts={};dailyAds={};convInputs={sessions:0,atc:0};}}
+function saveL(suffix,data){try{localStorage.setItem(storeKey()+suffix,JSON.stringify(data));}catch(e){}}
+
+// ═══════════════════════════════════════════
+// WOO API
+// ═══════════════════════════════════════════
+async function wooFetch(path){const sep=path.includes('?')?'&':'?';const r=await fetch(API_URL+path+sep+'consumer_key='+encodeURIComponent(CK)+'&consumer_secret='+encodeURIComponent(CS));if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||'HTTP '+r.status);}return r.json();}
+async function wooFetchAll(path,max=5){let all=[],p=1;while(p<=max){const d=await wooFetch(path+(path.includes('?')?'&':'?')+'per_page=100&page='+p);if(!d.length)break;all=all.concat(d);if(d.length<100)break;p++;}return all;}
+
+// ═══════════════════════════════════════════
+// GA4 INTEGRATION
+// ═══════════════════════════════════════════
+function connectGA(){
+  if(!GA_CLIENT||!GA_PROPERTY)return;
+  try{
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:GA_CLIENT,
+      scope:'https://www.googleapis.com/auth/analytics.readonly',
+      callback:async(resp)=>{
+        if(resp.error)return;
+        GA_TOKEN=resp.access_token;
+        document.getElementById('ga-badge').className='ga-status ga-connected';
+        document.getElementById('ga-badge').textContent='GA4 ✓';
+        document.getElementById('ga-badge').onclick=null;
+        await fetchGA4Data();
+        renderOverview();renderConversion();
+      }
+    });
+    client.requestAccessToken();
+  }catch(e){console.error('GA init error:',e);}
+}
+
+async function fetchGA4Data(){
+  if(!GA_TOKEN)return;
+  const dr=getDateRangeStr();
+  const propId=GA_PROPERTY.replace('properties/','');
+  try{
+    const body={dateRanges:[{startDate:dr.from,endDate:dr.to}],
+      metrics:[
+        {name:'sessions'},{name:'activeUsers'},{name:'newUsers'},
+        {name:'addToCarts'},{name:'checkouts'},{name:'ecommercePurchases'},
+        {name:'bounceRate'},{name:'averageSessionDuration'},
+        {name:'screenPageViews'},{name:'conversions'}
+      ]};
+    const r=await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:runReport`,{
+      method:'POST',headers:{'Authorization':'Bearer '+GA_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(d.rows&&d.rows[0]){
+      const vals=d.rows[0].metricValues.map(v=>parseFloat(v.value));
+      gaData={sessions:vals[0],activeUsers:vals[1],newUsers:vals[2],addToCarts:vals[3],checkouts:vals[4],purchases:vals[5],bounceRate:vals[6],avgSessionDuration:vals[7],pageViews:vals[8],conversions:vals[9]};
+    }
+    // Traffic sources
+    const body2={dateRanges:[{startDate:dr.from,endDate:dr.to}],
+      dimensions:[{name:'sessionDefaultChannelGroup'}],
+      metrics:[{name:'sessions'},{name:'conversions'}],
+      orderBys:[{metric:{metricName:'sessions'},desc:true}],limit:'8'};
+    const r2=await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propId}:runReport`,{
+      method:'POST',headers:{'Authorization':'Bearer '+GA_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(body2)});
+    const d2=await r2.json();
+    if(d2.rows){gaData.trafficSources=d2.rows.map(row=>({channel:row.dimensionValues[0].value,sessions:parseInt(row.metricValues[0].value),conversions:parseInt(row.metricValues[1].value)}));}
+  }catch(e){console.error('GA4 fetch error:',e);}
+}
+
+function getDateRangeStr(){
+  const today=new Date();const fmt=d=>d.toISOString().slice(0,10);
+  if(customFrom&&customTo) return {from:customFrom,to:customTo};
+  if(dateRange==='today') return {from:fmt(today),to:fmt(today)};
+  if(dateRange==='7d'){const f=new Date(today-6*864e5);return {from:fmt(f),to:fmt(today)};}
+  if(dateRange==='30d'){const f=new Date(today-29*864e5);return {from:fmt(f),to:fmt(today)};}
+  if(dateRange==='90d'){const f=new Date(today-89*864e5);return {from:fmt(f),to:fmt(today)};}
+  return {from:'2020-01-01',to:fmt(today)};
+}
+
+// ═══════════════════════════════════════════
+// DATE RANGE
+// ═══════════════════════════════════════════
+function initDateInputs(){
+  const t=new Date(),f=new Date(t-6*864e5);
+  document.getElementById('date-from').value=f.toISOString().slice(0,10);
+  document.getElementById('date-to').value=t.toISOString().slice(0,10);
+}
+
+function setRange(r,el){
+  dateRange=r;customFrom='';customTo='';
+  document.querySelectorAll('.date-controls .date-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  onDateChange();
+}
+
+function setCustomRange(){
+  customFrom=document.getElementById('date-from').value;
+  customTo=document.getElementById('date-to').value;
+  if(!customFrom||!customTo)return;
+  dateRange='custom';
+  document.querySelectorAll('.date-controls .date-btn').forEach(b=>b.classList.remove('active'));
+  onDateChange();
+}
+
+async function onDateChange(){
+  if(GA_TOKEN)await fetchGA4Data();
+  renderOverview();renderConversion();renderProfit();
+}
+
+function getFiltered(){
+  if(dateRange==='all'&&!customFrom) return allOrders;
+  const dr=getDateRangeStr();
+  const from=new Date(dr.from+'T00:00:00'),to=new Date(dr.to+'T23:59:59');
+  return allOrders.filter(o=>{const d=new Date(o.date_created);return d>=from&&d<=to;});
+}
+
+function getDaysInRange(){
+  const dr=getDateRangeStr();
+  const from=new Date(dr.from),to=new Date(dr.to);
+  return Math.max(1,Math.round((to-from)/864e5)+1);
+}
+
+// ═══════════════════════════════════════════
+// LOAD ALL DATA
+// ═══════════════════════════════════════════
+async function loadAll(){
+  ['recent-orders','orders-table','top-sellers','products-table','cust-grid'].forEach(id=>showLoading(id));
+  await Promise.all([loadOrders(),loadProducts(),loadCustomers()]);
+  renderOverview();renderOrdersTab();renderProductsTab();renderCustomersTab();renderConversion();renderProfit();
+}
+async function refreshAll(){allOrders=[];allCustomers=[];allProducts=[];if(GA_TOKEN)await fetchGA4Data();await loadAll();}
+async function loadOrders(){try{allOrders=await wooFetchAll('/wp-json/wc/v3/orders');}catch(e){}}
+async function loadProducts(){try{allProducts=await wooFetchAll('/wp-json/wc/v3/products');}catch(e){}}
+async function loadCustomers(){try{allCustomers=await wooFetchAll('/wp-json/wc/v3/customers');}catch(e){}}
+
+// ═══════════════════════════════════════════
+// OVERVIEW TAB
+// ═══════════════════════════════════════════
+function renderOverview(){
+  const orders=getFiltered(),cur=allOrders[0]?.currency_symbol||'$';
+  const done=orders.filter(o=>o.status==='completed'||o.status==='processing');
+  const rev=done.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const cnt=done.length, aov=cnt?rev/cnt:0;
+  const pend=orders.filter(o=>o.status==='processing'||o.status==='pending').length;
+  const refAmt=orders.filter(o=>o.status==='refunded').reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const items=done.reduce((s,o)=>s+(o.line_items||[]).reduce((a,i)=>a+i.quantity,0),0);
+  const avgItems=cnt?items/cnt:0;
+  const emails=new Set(done.map(o=>o.billing?.email).filter(Boolean));
+  const ec={};done.forEach(o=>{const e=o.billing?.email;if(e)ec[e]=(ec[e]||0)+1;});
+  const retPct=emails.size?(Object.values(ec).filter(c=>c>1).length/emails.size*100):0;
+  // Revenue per customer
+  const rpc=emails.size?rev/emails.size:0;
+  // Refund rate
+  const refRate=orders.length?(orders.filter(o=>o.status==='refunded').length/orders.length*100):0;
+
+  document.getElementById('kpi-overview').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Doanh thu</div><div class="kpi-value kpi-accent">${cur}${fmtE(rev)}</div><div class="kpi-sub">${cnt} đơn</div><div class="kpi-icon">💰</div></div>
+    <div class="kpi-card"><div class="kpi-label">Tổng đơn</div><div class="kpi-value">${orders.length}</div><div class="kpi-sub">${pend} chờ xử lý</div><div class="kpi-icon">📦</div></div>
+    <div class="kpi-card"><div class="kpi-label">AOV</div><div class="kpi-value">${cur}${fmtE(aov)}</div><div class="kpi-sub">${avgItems.toFixed(1)} SP/đơn</div><div class="kpi-icon">📊</div></div>
+    <div class="kpi-card"><div class="kpi-label">Khách hàng</div><div class="kpi-value kpi-green">${emails.size}</div><div class="kpi-sub">${retPct.toFixed(1)}% quay lại</div><div class="kpi-icon">👥</div></div>
+    <div class="kpi-card"><div class="kpi-label">Revenue/Customer</div><div class="kpi-value kpi-cyan">${cur}${fmtE(rpc)}</div><div class="kpi-sub">LTV trung bình</div><div class="kpi-icon">🎯</div></div>
+    <div class="kpi-card"><div class="kpi-label">Hoàn tiền</div><div class="kpi-value kpi-red">${cur}${fmtE(refAmt)}</div><div class="kpi-sub">${refRate.toFixed(1)}% tỷ lệ hoàn</div><div class="kpi-icon">↩️</div></div>
+    <div class="kpi-card"><div class="kpi-label">Tổng SP bán</div><div class="kpi-value kpi-blue">${items}</div><div class="kpi-sub">Trong kỳ</div><div class="kpi-icon">🏷️</div></div>
+    <div class="kpi-card"><div class="kpi-label">DT/ngày TB</div><div class="kpi-value kpi-purple">${cur}${fmtE(rev/getDaysInRange())}</div><div class="kpi-sub">${(cnt/getDaysInRange()).toFixed(1)} đơn/ngày</div><div class="kpi-icon">📈</div></div>`;
+
+  // GA4 KPIs
+  if(gaData){
+    document.getElementById('ga-overview-section').style.display='block';
+    const cr=gaData.sessions?(gaData.purchases/gaData.sessions*100):0;
+    document.getElementById('kpi-ga').innerHTML=`
+      <div class="kpi-card"><div class="kpi-label">Sessions</div><div class="kpi-value kpi-blue">${fmtN(gaData.sessions)}</div><div class="kpi-sub">${fmtN(gaData.pageViews)} pageviews</div></div>
+      <div class="kpi-card"><div class="kpi-label">Active Users</div><div class="kpi-value">${fmtN(gaData.activeUsers)}</div><div class="kpi-sub">${fmtN(gaData.newUsers)} mới</div></div>
+      <div class="kpi-card"><div class="kpi-label">Bounce Rate</div><div class="kpi-value kpi-red">${(gaData.bounceRate*100).toFixed(1)}%</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Session</div><div class="kpi-value">${Math.round(gaData.avgSessionDuration)}s</div></div>
+      <div class="kpi-card"><div class="kpi-label">CR (GA4)</div><div class="kpi-value kpi-green">${cr.toFixed(2)}%</div><div class="kpi-sub">${gaData.purchases} purchases</div></div>`;
+  }
+
+  renderChart('ch-revenue','line',groupByDate(done),d=>d.label,d=>d.total,'Doanh thu','#f59e0b','rgba(245,158,11,.08)',v=>cur+fmtS(v));
+  renderChart('ch-orders-daily','bar',groupByDate(orders),d=>d.label,d=>d.count,'Đơn hàng','rgba(59,130,246,.6)',null,null,true);
+  renderStatusChart();renderTop5Chart();renderRecentOrders();
+}
+
+function renderStatusChart(){
+  const c={};getFiltered().forEach(o=>c[o.status]=(c[o.status]||0)+1);
+  destroyChart('ch-status');
+  charts['ch-status']=new Chart(document.getElementById('ch-status'),{type:'doughnut',data:{labels:Object.keys(c).map(statusLabel),datasets:[{data:Object.values(c),backgroundColor:Object.keys(c).map(statusColor),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:'#8a8a8a',font:{size:9},padding:6,usePointStyle:true,pointStyleWidth:7}}}}});
+}
+
+function renderTop5Chart(){
+  const ps={};getFiltered().filter(o=>o.status==='completed'||o.status==='processing').forEach(o=>(o.line_items||[]).forEach(i=>{if(!ps[i.name])ps[i.name]=0;ps[i.name]+=i.quantity;}));
+  const s=Object.entries(ps).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  destroyChart('ch-top5');
+  charts['ch-top5']=new Chart(document.getElementById('ch-top5'),{type:'bar',data:{labels:s.map(x=>trunc(x[0],18)),datasets:[{data:s.map(x=>x[1]),backgroundColor:'rgba(245,158,11,.55)',borderRadius:4,maxBarThickness:24}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:9},stepSize:1}},y:{grid:{display:false},ticks:{color:'#8a8a8a',font:{size:9}}}}}});
+}
+
+// ═══════════════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════════════
+function renderChart(id,type,data,labelFn,valueFn,lbl,color,bgColor,tickFmt,intStep){
+  destroyChart(id);
+  charts[id]=new Chart(document.getElementById(id),{type,data:{labels:data.map(labelFn),datasets:[{label:lbl,data:data.map(valueFn),borderColor:color,backgroundColor:bgColor||color,fill:!!bgColor,tension:.3,pointRadius:2,borderWidth:2,borderRadius:type==='bar'?4:0,maxBarThickness:24}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>tickFmt?tickFmt(c.raw):c.raw}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:9},callback:tickFmt||undefined,stepSize:intStep?1:undefined}}}}});
+}
+
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+function groupByDate(orders,forceDays){
+  const days=forceDays||getDaysInRange();const map={};
+  for(let i=days-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);map[k]={label:d.getDate()+'/'+(d.getMonth()+1),total:0,count:0};}
+  orders.forEach(o=>{const k=(o.date_created||'').slice(0,10);if(map[k]){map[k].total+=parseFloat(o.total||0);map[k].count++;}});
+  return Object.values(map);
+}
+
+// ═══════════════════════════════════════════
+// RECENT ORDERS
+// ═══════════════════════════════════════════
+function renderRecentOrders(){const cur=allOrders[0]?.currency_symbol||'$';document.getElementById('recent-orders').innerHTML=ordersHTML(allOrders.slice(0,8),cur);}
+
+// ═══════════════════════════════════════════
+// ORDERS TAB
+// ═══════════════════════════════════════════
+function renderOrdersTab(){filterOrders();}
+function filterOrders(){
+  const q=(document.getElementById('order-search')?.value||'').toLowerCase();
+  const f=allOrders.filter(o=>(statusFilter==='all'||o.status===statusFilter)&&(!q||String(o.id).includes(q)||((o.billing?.first_name||'')+' '+(o.billing?.last_name||'')).toLowerCase().includes(q)||(o.billing?.email||'').toLowerCase().includes(q)));
+  const cur=allOrders[0]?.currency_symbol||'$';const st=(orderPage-1)*PG;
+  document.getElementById('orders-table').innerHTML=ordersHTML(f.slice(st,st+PG),cur);
+  renderPag('orders-pag',f.length,PG,orderPage,p=>{orderPage=p;filterOrders();});
+}
+function filterStatus(s,el){statusFilter=s;orderPage=1;document.querySelectorAll('#tab-orders .pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');filterOrders();}
+
+function ordersHTML(list,cur){
+  if(!list.length)return '<div class="empty">Không có đơn hàng</div>';
+  return `<table><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Trạng thái</th><th>Tổng tiền</th><th>Ngày</th></tr></thead><tbody>${list.map(o=>`<tr><td><div class="order-id">#${o.id}</div></td><td><div style="font-weight:500;font-size:.78rem">${o.billing?.first_name||''} ${o.billing?.last_name||''}</div><div style="font-size:.65rem;color:var(--text2)">${o.billing?.email||''}</div></td><td style="font-size:.7rem;color:var(--text2);max-width:180px">${(o.line_items||[]).slice(0,2).map(i=>'<div>• '+trunc(i.name,28)+' ×'+i.quantity+'</div>').join('')}${(o.line_items?.length>2)?'<div style="color:var(--text3)">+'+(o.line_items.length-2)+'</div>':''}</td><td><span class="status-badge s-${o.status}">${statusLabel(o.status)}</span></td><td><div class="amount hi">${cur}${fmtE(parseFloat(o.total||0))}</div></td><td style="color:var(--text2);font-size:.7rem">${fmtD(o.date_created)}</td></tr>`).join('')}</tbody></table>`;
+}
+
+// ═══════════════════════════════════════════
+// PRODUCTS TAB
+// ═══════════════════════════════════════════
+function renderProductsTab(){
+  const pub=allProducts.filter(p=>p.status==='publish').length;
+  const oos=allProducts.filter(p=>p.stock_status==='outofstock').length;
+  const types={};allProducts.forEach(p=>types[p.type]=(types[p.type]||0)+1);
+  document.getElementById('kpi-products').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Tổng SP</div><div class="kpi-value">${allProducts.length}</div><div class="kpi-sub">${pub} đang bán</div></div>
+    <div class="kpi-card"><div class="kpi-label">Hết hàng</div><div class="kpi-value kpi-red">${oos}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Loại SP</div><div class="kpi-value">${Object.keys(types).length}</div><div class="kpi-sub">${Object.entries(types).map(([k,v])=>k+': '+v).join(', ')}</div></div>`;
+  renderTopSellers();filterProducts();
+}
+
+function renderTopSellers(){
+  const ps={};allOrders.filter(o=>o.status==='completed'||o.status==='processing').forEach(o=>(o.line_items||[]).forEach(i=>{const k=i.product_id;if(!ps[k])ps[k]={name:i.name,qty:0,rev:0,id:k};ps[k].qty+=i.quantity;ps[k].rev+=parseFloat(i.total||0);}));
+  const sorted=Object.values(ps).sort((a,b)=>b.qty-a.qty).slice(0,10);
+  const mx=sorted[0]?.qty||1,cur=allOrders[0]?.currency_symbol||'$';
+  if(!sorted.length){document.getElementById('top-sellers').innerHTML='<div class="empty">Chưa có dữ liệu</div>';return;}
+  document.getElementById('top-sellers').innerHTML=sorted.map((p,i)=>{const prod=allProducts.find(x=>x.id===p.id);const img=prod?.images?.[0]?.src||'';const type=prod?.type||'–';return `<div class="product-row"><div class="product-rank">${String(i+1).padStart(2,'0')}</div>${img?`<img class="product-img" src="${img}">`:'<div class="product-img"></div>'}<div class="product-info"><div class="product-name">${p.name}</div><div class="product-meta"><span class="badge-type">${type}</span> · ${cur}${fmtE(p.rev)}</div></div><div class="product-bar-wrap"><div class="product-bar-bg"><div class="product-bar" style="width:${Math.round(p.qty/mx*100)}%"></div></div></div><div class="product-qty">${p.qty}<small>đã bán</small></div></div>`;}).join('');
+}
+
+function filterProducts(){
+  const q=(document.getElementById('prod-search')?.value||'').toLowerCase();
+  const tf=document.getElementById('prod-type')?.value||'all';
+  const sf=document.getElementById('prod-status')?.value||'all';
+  const f=allProducts.filter(p=>(!q||p.name.toLowerCase().includes(q)||String(p.id).includes(q)||(p.sku||'').toLowerCase().includes(q))&&(tf==='all'||p.type===tf)&&(sf==='all'||p.status===sf));
+  const cur=allOrders[0]?.currency_symbol||'$',st=(prodPage-1)*PG,pg=f.slice(st,st+PG);
+  if(!pg.length){document.getElementById('products-table').innerHTML='<div class="empty">Không tìm thấy</div>';return;}
+  document.getElementById('products-table').innerHTML=`<table><thead><tr><th></th><th>Sản phẩm</th><th>SKU</th><th>Loại</th><th>Giá</th><th>Tồn kho</th><th>Trạng thái</th></tr></thead><tbody>${pg.map(p=>{const img=p.images?.[0]?.src||'';const stk=p.stock_quantity!==null?p.stock_quantity:(p.stock_status==='instock'?'Còn':'Hết');return `<tr><td>${img?`<img src="${img}" style="width:30px;height:30px;border-radius:4px;object-fit:cover">`:'<div style="width:30px;height:30px;background:var(--surface3);border-radius:4px"></div>'}</td><td><div style="font-weight:500;font-size:.78rem">${trunc(p.name,36)}</div><div style="font-size:.62rem;color:var(--text3)">ID: ${p.id}</div></td><td style="font-family:var(--mono);font-size:.7rem;color:var(--text2)">${p.sku||'–'}</td><td><span class="badge-type">${p.type}</span></td><td class="amount">${cur}${p.price||'0'}</td><td style="font-size:.76rem;${p.stock_status==='outofstock'?'color:var(--red)':''}">${stk}</td><td><span class="status-badge ${p.status==='publish'?'s-completed':'s-pending'}">${p.status==='publish'?'Đang bán':p.status}</span></td></tr>`;}).join('')}</tbody></table>`;
+  renderPag('prod-pag',f.length,PG,prodPage,p=>{prodPage=p;filterProducts();});
+}
+
+// ═══════════════════════════════════════════
+// CUSTOMERS TAB
+// ═══════════════════════════════════════════
+function renderCustomersTab(){
+  const oe={};allOrders.forEach(o=>{const e=o.billing?.email;if(e)oe[e]=(oe[e]||0)+1;});
+  const rep=Object.values(oe).filter(c=>c>1).length;
+  document.getElementById('kpi-customers').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Tổng KH</div><div class="kpi-value">${allCustomers.length}</div></div>
+    <div class="kpi-card"><div class="kpi-label">KH mới (1 đơn)</div><div class="kpi-value kpi-green">${Object.values(oe).filter(c=>c===1).length}</div></div>
+    <div class="kpi-card"><div class="kpi-label">KH quay lại</div><div class="kpi-value kpi-blue">${rep}</div><div class="kpi-sub">${Object.keys(oe).length?(rep/Object.keys(oe).length*100).toFixed(1):0}%</div></div>`;
+  filterCustomers();
+}
+function filterCustomers(){
+  const q=(document.getElementById('cust-search')?.value||'').toLowerCase();
+  const list=allCustomers.filter(c=>!q||(c.first_name+' '+c.last_name).toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q));
+  const oe={};allOrders.forEach(o=>{const e=o.billing?.email;if(!e)return;if(!oe[e])oe[e]={n:0,t:0};oe[e].n++;oe[e].t+=parseFloat(o.total||0);});
+  const cur=allOrders[0]?.currency_symbol||'$';
+  if(!list.length){document.getElementById('cust-grid').innerHTML='<div class="empty">Không tìm thấy</div>';return;}
+  document.getElementById('cust-grid').innerHTML=list.map(c=>{const s=oe[c.email]||{n:0,t:0};const ini=((c.first_name?.[0]||'')+(c.last_name?.[0]||'')).toUpperCase()||'?';return `<div class="customer-card"><div class="customer-avatar">${ini}</div><div class="c-name">${c.first_name} ${c.last_name}</div><div class="c-email">${c.email}</div><div class="c-stats"><div><div class="c-stat-label">Đơn</div><div class="c-stat-value">${s.n}</div></div><div><div class="c-stat-label">Tổng chi</div><div class="c-stat-value">${cur}${fmtS(s.t)}</div></div><div><div class="c-stat-label">Đăng ký</div><div class="c-stat-value" style="font-size:.66rem">${fmtDs(c.date_created)}</div></div></div></div>`;}).join('');
+}
+
+// ═══════════════════════════════════════════
+// CONVERSION TAB
+// ═══════════════════════════════════════════
+function renderConversion(){
+  document.getElementById('in-sessions').value=convInputs.sessions||'';
+  document.getElementById('in-atc').value=convInputs.atc||'';
+  if(gaData){document.getElementById('manual-conv-inputs').style.display='none';document.getElementById('ga-traffic-card').style.display='block';renderTrafficChart();}
+  calcConv();renderCRChart();renderHourlyChart();
+}
+
+function calcConv(){
+  const orders=getFiltered();
+  const done=orders.filter(o=>o.status==='completed'||o.status==='processing');
+  const purchases=done.length;
+  const checkouts=orders.filter(o=>o.status!=='failed'&&o.status!=='trash').length;
+
+  let sessions,atc;
+  if(gaData){sessions=gaData.sessions;atc=gaData.addToCarts;}
+  else{sessions=parseInt(document.getElementById('in-sessions')?.value)||convInputs.sessions||0;atc=parseInt(document.getElementById('in-atc')?.value)||convInputs.atc||0;}
+
+  const crS=sessions?(purchases/sessions*100):0;
+  const crATC=sessions?(atc/sessions*100):0;
+  const crCO=atc?(checkouts/atc*100):0;
+  const crP=checkouts?(purchases/checkouts*100):0;
+  const rpv=sessions?(done.reduce((s,o)=>s+parseFloat(o.total||0),0)/sessions):0;
+  const cur=allOrders[0]?.currency_symbol||'$';
+
+  document.getElementById('kpi-conv').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Sessions</div><div class="kpi-value kpi-blue">${sessions?fmtN(sessions):'–'}</div><div class="kpi-sub">${gaData?'Từ GA4':'Nhập tay'}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Add to Cart</div><div class="kpi-value">${atc?fmtN(atc):'–'}</div><div class="kpi-sub">${crATC.toFixed(2)}% từ sessions</div></div>
+    <div class="kpi-card"><div class="kpi-label">Checkout</div><div class="kpi-value">${checkouts}</div><div class="kpi-sub">${crCO.toFixed(2)}% từ ATC</div></div>
+    <div class="kpi-card"><div class="kpi-label">Purchase</div><div class="kpi-value kpi-green">${purchases}</div><div class="kpi-sub">${crP.toFixed(2)}% từ checkout</div></div>
+    <div class="kpi-card"><div class="kpi-label">CR tổng</div><div class="kpi-value kpi-accent">${crS.toFixed(2)}%</div><div class="kpi-sub">Session→Purchase</div></div>
+    <div class="kpi-card"><div class="kpi-label">Revenue/Visitor</div><div class="kpi-value kpi-cyan">${cur}${fmtE(rpv)}</div></div>
+    ${gaData?`<div class="kpi-card"><div class="kpi-label">Bounce Rate</div><div class="kpi-value kpi-red">${(gaData.bounceRate*100).toFixed(1)}%</div></div>`:''}`;
+
+  // Funnel
+  const maxV=Math.max(sessions||1,atc||1,checkouts||1,purchases||1);
+  const steps=[{l:'Sessions',v:sessions,pct:'100%',c:'#3b82f6'},{l:'Add to Cart',v:atc,pct:sessions?(atc/sessions*100).toFixed(1)+'%':'–',c:'#f59e0b'},{l:'Checkout',v:checkouts,pct:atc?(checkouts/atc*100).toFixed(1)+'%':'–',c:'#8b5cf6'},{l:'Purchase',v:purchases,pct:checkouts?(purchases/checkouts*100).toFixed(1)+'%':'–',c:'#10b981'}];
+  document.getElementById('conv-funnel').innerHTML=steps.map((s,i)=>{const h=maxV?Math.max((s.v/maxV)*130,3):3;return `<div class="funnel-step"><div class="funnel-bar" style="height:${h}px;width:${75-i*12}%;background:${s.c}"></div><div class="funnel-value">${s.v||'–'}</div><div class="funnel-label">${s.l}</div><div class="funnel-pct">${s.pct}</div></div>${i<3?'<div class="funnel-arrow">→</div>':''}`;}).join('');
+}
+
+function saveConvInputs(){convInputs.sessions=parseInt(document.getElementById('in-sessions').value)||0;convInputs.atc=parseInt(document.getElementById('in-atc').value)||0;saveL('_conv',convInputs);calcConv();}
+
+function renderCRChart(){
+  const data=groupByDate(allOrders.filter(o=>o.status==='completed'||o.status==='processing'));
+  renderChart('ch-cr','line',data,d=>d.label,d=>d.count,'Purchases','#10b981','rgba(16,185,129,.08)',null,true);
+}
+
+function renderHourlyChart(){
+  const hrs=Array(24).fill(0);getFiltered().forEach(o=>{const h=new Date(o.date_created).getHours();hrs[h]++;});
+  destroyChart('ch-hourly');
+  charts['ch-hourly']=new Chart(document.getElementById('ch-hourly'),{type:'bar',data:{labels:hrs.map((_,i)=>i+'h'),datasets:[{data:hrs,backgroundColor:'rgba(139,92,246,.45)',borderRadius:3,maxBarThickness:14}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#555',font:{size:8}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:9},stepSize:1}}}}});
+}
+
+function renderTrafficChart(){
+  if(!gaData?.trafficSources)return;
+  destroyChart('ch-traffic');
+  const src=gaData.trafficSources;
+  charts['ch-traffic']=new Chart(document.getElementById('ch-traffic'),{type:'bar',data:{labels:src.map(s=>s.channel),datasets:[{label:'Sessions',data:src.map(s=>s.sessions),backgroundColor:'rgba(59,130,246,.5)',borderRadius:4,maxBarThickness:28},{label:'Conversions',data:src.map(s=>s.conversions),backgroundColor:'rgba(16,185,129,.5)',borderRadius:4,maxBarThickness:28}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a8a8a',font:{size:9}}}},scales:{x:{grid:{display:false},ticks:{color:'#8a8a8a',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:9}}}}}});
+}
+
+// ═══════════════════════════════════════════
+// PROFIT TAB
+// ═══════════════════════════════════════════
+function renderProfit(){renderAdsDailyTable();renderTypeCosts();renderCOGSTable();recalcProfit();}
+
+function renderAdsDailyTable(){
+  const days=getDaysInRange();const rows=[];
+  for(let i=days-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);rows.push({date:k,label:d.getDate()+'/'+(d.getMonth()+1),spend:dailyAds[k]||0});}
+  const total=rows.reduce((s,r)=>s+r.spend,0);
+  document.getElementById('ads-daily-wrap').innerHTML=`<table><thead><tr><th>Ngày</th><th>Ads Spend ($)</th></tr></thead><tbody>${rows.map(r=>`<tr><td style="font-size:.75rem;color:var(--text2)">${r.label}</td><td><input class="inline-edit ads-input" data-date="${r.date}" type="number" step="0.01" value="${r.spend||''}" placeholder="0"></td></tr>`).join('')}<tr style="border-top:1px solid var(--border)"><td style="font-weight:600;font-size:.78rem">Tổng</td><td class="ads-total">$${fmtE(total)}</td></tr></tbody></table>`;
+}
+
+function saveAllAds(){
+  document.querySelectorAll('.ads-input').forEach(inp=>{dailyAds[inp.dataset.date]=parseFloat(inp.value)||0;});
+  saveL('_ads',dailyAds);renderAdsDailyTable();recalcProfit();
+}
+
+function renderTypeCosts(){
+  const types=[...new Set(allProducts.map(p=>p.type))];
+  document.getElementById('type-cost-wrap').innerHTML=`<table><thead><tr><th>Product Type</th><th>Cost mặc định ($)</th></tr></thead><tbody>${types.map(t=>`<tr><td><span class="badge-type">${t}</span> <span style="font-size:.68rem;color:var(--text2)">(${allProducts.filter(p=>p.type===t).length} SP)</span></td><td><input class="inline-edit type-cost-input" data-type="${t}" type="number" step="0.01" value="${typeCosts[t]||''}" placeholder="0"></td></tr>`).join('')}</tbody></table>`;
+}
+
+function saveTypeCosts(){
+  document.querySelectorAll('.type-cost-input').forEach(inp=>{typeCosts[inp.dataset.type]=parseFloat(inp.value)||0;});
+  saveL('_tcost',typeCosts);renderCOGSTable();recalcProfit();
+}
+
+function renderCOGSTable(){
+  const ps={};allOrders.filter(o=>o.status==='completed'||o.status==='processing').forEach(o=>(o.line_items||[]).forEach(i=>{const k=i.product_id;if(!ps[k])ps[k]={name:i.name,qty:0,rev:0,price:parseFloat(i.price||0),id:k};ps[k].qty+=i.quantity;ps[k].rev+=parseFloat(i.total||0);}));
+  const sorted=Object.entries(ps).sort((a,b)=>b[1].qty-a[1].qty);
+  const cur=allOrders[0]?.currency_symbol||'$';
+  if(!sorted.length){document.getElementById('cogs-table').innerHTML='<div class="empty">Chưa có dữ liệu</div>';return;}
+  document.getElementById('cogs-table').innerHTML=`<table><thead><tr><th>Sản phẩm</th><th>Loại</th><th>Giá bán</th><th>Đã bán</th><th>DT</th><th>Cost/SP</th><th>COGS</th><th>Gross</th></tr></thead><tbody>${sorted.map(([id,p])=>{
+    const prod=allProducts.find(x=>x.id==id);
+    const type=prod?.type||'simple';
+    const cost=cogsData[id]||typeCosts[type]||0;
+    const cogs=cost*p.qty;const gross=p.rev-cogs;
+    return `<tr><td style="font-size:.75rem;font-weight:500">${trunc(p.name,30)}<div style="font-size:.6rem;color:var(--text3)">ID:${id}</div></td><td><span class="badge-type">${type}</span></td><td class="amount">${cur}${fmtE(p.price)}</td><td style="font-family:var(--mono);font-size:.75rem">${p.qty}</td><td class="amount">${cur}${fmtE(p.rev)}</td><td><input class="inline-edit cogs-input" data-id="${id}" type="number" step="0.01" value="${cogsData[id]||''}" placeholder="${typeCosts[type]||0}" onchange="saveCOGS(this)" onkeydown="if(event.key==='Enter'){saveCOGS(this);recalcProfit();}"></td><td class="amount" style="color:var(--red)">${cur}${fmtE(cogs)}</td><td class="amount" style="color:${gross>=0?'var(--green)':'var(--red)'}">${cur}${fmtE(gross)}</td></tr>`;}).join('')}</tbody></table>`;
+}
+
+function saveCOGS(el){cogsData[el.dataset.id]=parseFloat(el.value)||0;saveL('_cogs',cogsData);}
+
+function recalcProfit(){
+  const orders=getFiltered().filter(o=>o.status==='completed'||o.status==='processing');
+  const cur=allOrders[0]?.currency_symbol||'$';
+  const rev=orders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  let totalCOGS=0;
+  orders.forEach(o=>(o.line_items||[]).forEach(i=>{const prod=allProducts.find(x=>x.id===i.product_id);const type=prod?.type||'simple';const cost=cogsData[i.product_id]||typeCosts[type]||0;totalCOGS+=cost*i.quantity;}));
+
+  // Total ads for date range
+  const dr=getDateRangeStr();const from=new Date(dr.from),to=new Date(dr.to);
+  let totalAds=0;
+  Object.entries(dailyAds).forEach(([d,v])=>{const dt=new Date(d);if(dt>=from&&dt<=to)totalAds+=v;});
+
+  const shipping=orders.reduce((s,o)=>s+parseFloat(o.shipping_total||0),0);
+  const gross=rev-totalCOGS;
+  const net=gross-totalAds;
+  const margin=rev?(net/rev*100):0;
+  const roas=totalAds?(rev/totalAds):0;
+  const cpa=orders.length?(totalAds/orders.length):0;
+  const grossMargin=rev?((rev-totalCOGS)/rev*100):0;
+
+  document.getElementById('profit-kpis').innerHTML=`
+    <div class="profit-box"><div class="label">Revenue</div><div class="value" style="color:var(--accent)">${cur}${fmtE(rev)}</div></div>
+    <div class="profit-box"><div class="label">COGS</div><div class="value" style="color:var(--red)">${cur}${fmtE(totalCOGS)}</div></div>
+    <div class="profit-box"><div class="label">Gross Profit</div><div class="value" style="color:${gross>=0?'var(--green)':'var(--red)'}">${cur}${fmtE(gross)}</div></div>
+    <div class="profit-box"><div class="label">Gross Margin</div><div class="value" style="color:${grossMargin>=0?'var(--green)':'var(--red)'}">${grossMargin.toFixed(1)}%</div></div>
+    <div class="profit-box"><div class="label">Ads Spend</div><div class="value" style="color:var(--red)">${cur}${fmtE(totalAds)}</div></div>
+    <div class="profit-box"><div class="label">Net Profit</div><div class="value" style="color:${net>=0?'var(--green)':'var(--red)'}">${cur}${fmtE(net)}</div></div>
+    <div class="profit-box"><div class="label">Net Margin</div><div class="value" style="color:${margin>=0?'var(--green)':'var(--red)'}">${margin.toFixed(1)}%</div></div>
+    <div class="profit-box"><div class="label">ROAS</div><div class="value" style="color:var(--blue)">${roas.toFixed(2)}x</div></div>
+    <div class="profit-box"><div class="label">CPA</div><div class="value">${cur}${fmtE(cpa)}</div></div>
+    <div class="profit-box"><div class="label">Shipping</div><div class="value">${cur}${fmtE(shipping)}</div></div>`;
+
+  // Charts
+  destroyChart('ch-profit-pie');
+  charts['ch-profit-pie']=new Chart(document.getElementById('ch-profit-pie'),{type:'doughnut',data:{labels:['COGS','Ads','Net Profit'],datasets:[{data:[totalCOGS,totalAds,Math.max(net,0)],backgroundColor:['#ef4444','#f59e0b','#10b981'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#8a8a8a',font:{size:9},padding:6,usePointStyle:true}}}}});
+
+  destroyChart('ch-cost-rev');
+  charts['ch-cost-rev']=new Chart(document.getElementById('ch-cost-rev'),{type:'bar',data:{labels:['Revenue','COGS','Ads','Gross','Net'],datasets:[{data:[rev,totalCOGS,totalAds,gross,net],backgroundColor:['#f59e0b','#ef4444','#f97316','#10b981',net>=0?'#3b82f6':'#ef4444'],borderRadius:4,maxBarThickness:32}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>cur+fmtE(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:'#8a8a8a',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:9},callback:v=>cur+fmtS(v)}}}}});
+}
+
+// ═══════════════════════════════════════════
+// PAGINATION
+// ═══════════════════════════════════════════
+function renderPag(id,total,size,cur,fn){
+  const pages=Math.ceil(total/size);if(pages<=1){document.getElementById(id).innerHTML='';return;}
+  let h=`<button class="page-btn" ${cur===1?'disabled':''}>‹</button>`;
+  for(let i=1;i<=pages;i++){if(i===1||i===pages||Math.abs(i-cur)<=1)h+=`<button class="page-btn ${i===cur?'active':''}">${i}</button>`;else if(Math.abs(i-cur)===2)h+=`<span class="page-info">…</span>`;}
+  h+=`<button class="page-btn" ${cur===pages?'disabled':''}>›</button><span class="page-info">${total}</span>`;
+  const el=document.getElementById(id);el.innerHTML=h;
+  el.querySelectorAll('.page-btn').forEach(b=>b.addEventListener('click',function(){const t=this.textContent.trim();if(t==='‹')fn(Math.max(1,cur-1));else if(t==='›')fn(Math.min(pages,cur+1));else{const n=parseInt(t);if(n)fn(n);}}));
+}
+
+// ═══════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════
+function switchTab(name){
+  const tabs=['overview','orders','products','customers','conversion','profit'];
+  document.querySelectorAll('#main-tabs .tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function fmtE(v){return v?new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v):'0.00';}
+function fmtS(v){if(v>=1e9)return(v/1e9).toFixed(1)+'B';if(v>=1e6)return(v/1e6).toFixed(1)+'M';if(v>=1e3)return(v/1e3).toFixed(0)+'K';return Math.round(v);}
+function fmtN(v){return new Intl.NumberFormat('en-US').format(Math.round(v));}
+function fmtD(s){if(!s)return '–';const d=new Date(s);return d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});}
+function fmtDs(s){if(!s)return '–';return new Date(s).toLocaleDateString('vi-VN');}
+function trunc(s,n){return s&&s.length>n?s.slice(0,n)+'…':s||'';}
+function statusLabel(s){return{processing:'Đang xử lý',completed:'Hoàn thành',pending:'Chờ thanh toán',cancelled:'Đã hủy','on-hold':'Tạm giữ',refunded:'Hoàn tiền',failed:'Thất bại'}[s]||s;}
+function statusColor(s){return{processing:'#3b82f6',completed:'#10b981',pending:'#f59e0b',cancelled:'#ef4444','on-hold':'#8b5cf6',refunded:'#6b7280',failed:'#ef4444'}[s]||'#555';}
+function showLoading(id){const el=document.getElementById(id);if(el)el.innerHTML='<div class="loading"><div class="spinner"></div> Đang tải...</div>';}
+
+// ═══════════════════════════════════════════
+// AUTO-RESTORE
+// ═══════════════════════════════════════════
+window.addEventListener('load',()=>{
+  const url=sessionStorage.getItem('woo_url'),ck=sessionStorage.getItem('woo_ck'),cs=sessionStorage.getItem('woo_cs');
+  if(url&&ck&&cs){
+    API_URL=url;CK=ck;CS=cs;
+    GA_PROPERTY=sessionStorage.getItem('ga_property')||'';
+    GA_CLIENT=sessionStorage.getItem('ga_client')||'';
+    loadLocal();initDateInputs();
+    document.getElementById('site-badge').textContent=new URL(url).hostname;
+    document.getElementById('setup-screen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    if(GA_PROPERTY&&GA_CLIENT){document.getElementById('ga-badge').style.display='inline';}
+    loadAll();
+  }
+});
+setInterval(refreshAll,5*60*1000);
+</script>
+</body>
+</html>
