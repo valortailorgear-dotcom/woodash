@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WooDash Pro v3</title>
+<link rel="manifest" crossorigin="use-credentials">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0b">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--bg:#0a0a0b;--s1:#131315;--s2:#1a1a1d;--s3:#222225;--b1:#2a2a2e;--b2:#35353a;--acc:#f59e0b;--acc2:#fbbf24;--accd:rgba(245,158,11,.1);--g:#10b981;--gd:rgba(16,185,129,.1);--r:#ef4444;--rd:rgba(239,68,68,.08);--bl:#3b82f6;--bld:rgba(59,130,246,.1);--p:#8b5cf6;--pd:rgba(139,92,246,.1);--cy:#06b6d4;--t1:#f0f0f0;--t2:#8a8a8a;--t3:#555;--f:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:var(--f);--sans:var(--f);--disp:var(--f);--gap:.6rem}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-variant-numeric:tabular-nums}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);min-height:100vh;min-height:100dvh;overflow-x:hidden;font-size:14px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* === SETUP === */
+#setup{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1rem;position:relative}
+#setup::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(245,158,11,.06) 0%,transparent 70%);pointer-events:none}
+.s-card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:1.5rem;width:100%;max-width:500px;position:relative}
+.s-logo{font-family:var(--disp);font-size:1.5rem;font-weight:800;color:var(--acc);margin-bottom:.15rem}
+.s-sub{color:var(--t2);font-size:.8rem;margin-bottom:1.5rem}
+.s-sect{margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--b1)}
+.s-sect-t{font-family:var(--disp);font-size:.8rem;font-weight:700;margin-bottom:.1rem}
+.s-sect-d{font-size:.68rem;color:var(--t2);margin-bottom:.75rem}
+.fg{margin-bottom:.85rem}
+label{display:block;font-size:.65rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+input[type="text"],input[type="password"],input[type="number"],input[type="date"]{width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:6px;padding:.55rem .75rem;color:var(--t1);font-family:var(--mono);font-size:.78rem;outline:none;transition:border-color .2s}
+input:focus{border-color:var(--acc)}input::placeholder{color:var(--t3)}
+.btn-main{width:100%;background:var(--acc);color:#000;border:none;border-radius:7px;padding:.75rem;font-family:var(--disp);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:.4rem}
+.btn-main:hover{background:var(--acc2)}
+.btn-sm{padding:.38rem .7rem;font-size:.7rem;border-radius:5px;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);transition:all .15s}
+.btn-a{background:var(--acc);color:#000}.btn-a:hover{background:var(--acc2)}
+.btn-o{background:transparent;border:1px solid var(--b1);color:var(--t2)}.btn-o:hover{border-color:var(--acc);color:var(--acc)}
+.err{color:var(--r);font-size:.72rem;margin-top:.5rem;display:none;padding:.4rem .65rem;background:var(--rd);border-radius:5px;border:1px solid rgba(239,68,68,.2)}
+.opt{font-size:.58rem;color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:.2rem}
+.hint{font-size:.65rem;color:var(--t3);margin-top:.15rem}
+.hint a{color:var(--acc)}
+
+/* === SHELL === */
+#app{display:none}
+.top{background:var(--s1);border-bottom:1px solid var(--b1);padding:0 .75rem;height:48px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.logo{font-family:var(--disp);font-size:1rem;font-weight:800;color:var(--acc)}
+.site-b{font-family:var(--mono);font-size:.62rem;color:var(--t2);background:var(--s2);padding:.15rem .45rem;border-radius:12px;border:1px solid var(--b1);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-r{display:flex;align-items:center;gap:.35rem}
+.ga-b{font-size:.6rem;padding:.15rem .4rem;border-radius:8px;font-weight:600;cursor:pointer}
+.ga-on{background:var(--gd);color:var(--g)}.ga-off{background:var(--rd);color:var(--r)}
+.rbtn{background:var(--s2);border:1px solid var(--b1);color:var(--t2);width:32px;height:32px;border-radius:6px;font-size:.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.rbtn:hover{border-color:var(--acc);color:var(--acc)}
+.dbtn{background:none;border:none;color:var(--t3);font-size:.75rem;cursor:pointer;padding:4px}.dbtn:hover{color:var(--r)}
+
+/* DATE BAR */
+.datebar{background:var(--s1);border-bottom:1px solid var(--b1);padding:.4rem .75rem;display:flex;align-items:center;gap:.3rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.datebar::-webkit-scrollbar{display:none}
+.db{background:var(--s2);border:1px solid var(--b1);color:var(--t2);padding:.2rem .45rem;border-radius:4px;font-size:.65rem;cursor:pointer;font-family:var(--mono);white-space:nowrap;transition:all .15s}
+.db.on{background:var(--accd);border-color:var(--acc);color:var(--acc)}
+.di{background:var(--bg);border:1px solid var(--b1);border-radius:4px;padding:.18rem .3rem;color:var(--t1);font-family:var(--mono);font-size:.62rem;width:95px;outline:none}
+.di:focus{border-color:var(--acc)}
+.dsep{color:var(--t3);font-size:.6rem}
+.cmp-toggle{font-size:.6rem;color:var(--t2);display:flex;align-items:center;gap:.2rem;cursor:pointer;white-space:nowrap;margin-left:auto}
+.cmp-toggle input{accent-color:var(--acc)}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--b1);background:var(--s1);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:.55rem .7rem;font-size:.7rem;font-weight:500;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.tab.on{color:var(--acc);border-bottom-color:var(--acc)}.tab:hover:not(.on){color:var(--t1)}
+.main{padding:.75rem;max-width:1440px;margin:0 auto}
+.pane{display:none}.pane.on{display:block}
+
+/* KPI */
+.kg{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap);margin-bottom:var(--gap)}
+.kc{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:.65rem .75rem;position:relative;transition:border-color .15s;overflow:hidden}
+.kc:hover{border-color:var(--b2)}
+.kl{font-size:.58rem;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);font-weight:500;margin-bottom:.3rem}
+.kv{font-family:var(--disp);font-size:1.2rem;font-weight:800;line-height:1;margin-bottom:.2rem;letter-spacing:-.5px}
+.ks{font-size:.62rem;color:var(--t2)}
+.ki{position:absolute;top:.6rem;right:.6rem;font-size:.8rem;opacity:.25}
+.ktrend{display:inline-flex;align-items:center;gap:1px;font-size:.58rem;font-weight:600;padding:1px 3px;border-radius:3px}
+.kup{color:var(--g);background:var(--gd)}.kdn{color:var(--r);background:var(--rd)}
+/* Color helpers */
+.c-acc{color:var(--acc)}.c-g{color:var(--g)}.c-r{color:var(--r)}.c-bl{color:var(--bl)}.c-p{color:var(--p)}.c-cy{color:var(--cy)}
+
+/* CARD */
+.cd{background:var(--s1);border:1px solid var(--b1);border-radius:8px;overflow:hidden;margin-bottom:var(--gap)}
+.ch{padding:.65rem .75rem;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;gap:.4rem;flex-wrap:wrap}
+.ct{font-family:var(--disp);font-size:.78rem;font-weight:700;letter-spacing:-.2px}
+.cb{padding:.75rem}
+.ca{font-size:.65rem;color:var(--acc);cursor:pointer;background:none;border:none;font-family:var(--sans)}.ca:hover{text-decoration:underline}
+
+/* CHARTS */
+.cg{display:grid;grid-template-columns:1fr;gap:var(--gap);margin-bottom:var(--gap)}
+.cw{position:relative;height:170px}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);padding:.45rem .6rem;border-bottom:1px solid var(--b1);font-weight:500;white-space:nowrap}
+td{padding:.5rem .6rem;font-size:.72rem;border-bottom:1px solid rgba(42,42,42,.3);vertical-align:middle}
+tr:last-child td{border-bottom:none}tr:hover td{background:var(--s2)}
+.oid{font-family:var(--mono);font-size:.68rem;color:var(--acc)}
+.sb{display:inline-flex;align-items:center;gap:.2rem;padding:.1rem .4rem;border-radius:14px;font-size:.6rem;font-weight:600;white-space:nowrap}
+.sb::before{content:'●';font-size:.35rem}
+.sp{background:var(--bld);color:var(--bl)}.sc{background:var(--gd);color:var(--g)}.sw{background:var(--accd);color:var(--acc)}.sx,.sf{background:var(--rd);color:var(--r)}.sh{background:var(--pd);color:var(--p)}.sr{background:rgba(107,114,128,.1);color:#6b7280}
+.am{font-family:var(--mono);font-size:.72rem}.amh{color:var(--acc)}
+.tb-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* FILTERS */
+.tbar{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.si{background:var(--bg);border:1px solid var(--b1);border-radius:5px;padding:.35rem .55rem;color:var(--t1);font-family:var(--sans);font-size:.7rem;width:140px;outline:none}
+.si:focus{border-color:var(--acc)}.si::placeholder{color:var(--t3)}
+.pf{display:flex;gap:.2rem;flex-wrap:wrap}
+.pl{padding:.18rem .45rem;border-radius:14px;font-size:.6rem;font-weight:500;cursor:pointer;border:1px solid var(--b1);background:var(--s2);color:var(--t2);transition:all .12s}
+.pl.on,.pl:hover{border-color:var(--acc);color:var(--acc);background:var(--accd)}
+select{background:var(--bg);border:1px solid var(--b1);border-radius:5px;padding:.3rem .45rem;color:var(--t1);font-family:var(--sans);font-size:.68rem;outline:none;cursor:pointer}select:focus{border-color:var(--acc)}
+
+/* PRODUCT */
+.pr{display:flex;align-items:center;gap:.5rem;padding:.4rem .75rem;border-bottom:1px solid rgba(42,42,42,.25)}.pr:hover{background:var(--s2)}.pr:last-child{border-bottom:none}
+.prk{font-family:var(--mono);font-size:.6rem;color:var(--t3);width:18px;text-align:right}
+.pri{width:28px;height:28px;border-radius:4px;object-fit:cover;background:var(--s3);flex-shrink:0}
+.prn{flex:1;min-width:0}.prn-t{font-size:.72rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prn-m{font-size:.6rem;color:var(--t2);margin-top:.05rem}
+.prb{width:80px;flex-shrink:0}.prb-bg{height:4px;background:var(--s3);border-radius:2px;overflow:hidden}.prb-f{height:100%;background:var(--acc);border-radius:2px}
+.prq{font-family:var(--mono);font-size:.7rem;color:var(--acc);width:45px;text-align:right}.prq small{color:var(--t3);font-size:.58rem;display:block}
+
+/* CUSTOMERS */
+.custg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--gap)}
+.custc{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:.65rem;transition:border-color .15s}.custc:hover{border-color:var(--b2)}
+.cav{width:30px;height:30px;border-radius:50%;background:var(--accd);color:var(--acc);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;font-size:.65rem;margin-bottom:.4rem}
+.cn{font-weight:600;font-size:.75rem}.ce{font-size:.6rem;color:var(--t2);margin-top:.05rem}
+.cst{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;margin-top:.5rem;padding-top:.45rem;border-top:1px solid var(--b1)}
+.csl{font-size:.52rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em}.csv{font-family:var(--mono);font-size:.68rem;font-weight:500;margin-top:.05rem}
+
+/* FUNNEL */
+.fun{display:flex;gap:1px;align-items:flex-end;padding:.5rem 0}
+.fus{flex:1;text-align:center}
+.fub{margin:0 auto;border-radius:4px 4px 0 0;transition:height .4s;min-height:2px}
+.fuv{font-family:var(--disp);font-size:.85rem;font-weight:700;margin-top:.3rem}
+.ful{font-size:.6rem;color:var(--t2);margin-top:.1rem}
+.fup{font-size:.55rem;color:var(--acc);font-weight:600;margin-top:.05rem}
+
+/* PROFIT */
+.psg{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap);margin-bottom:var(--gap)}
+.psb{background:var(--s2);border:1px solid var(--b1);border-radius:6px;padding:.5rem .65rem}
+.psb .lb{font-size:.56rem;color:var(--t2);text-transform:uppercase;letter-spacing:.06em}
+.psb .vl{font-family:var(--disp);font-size:1rem;font-weight:700;margin-top:.15rem}
+.ie{background:var(--bg);border:1px solid var(--b1);border-radius:4px;padding:.15rem .3rem;color:var(--acc);font-family:var(--mono);font-size:.68rem;width:70px;outline:none;text-align:right}.ie:focus{border-color:var(--acc)}
+.bt{display:inline-block;padding:.08rem .3rem;border-radius:3px;font-size:.55rem;font-weight:600;text-transform:uppercase;background:var(--s3);color:var(--t2)}
+
+/* COLLECTION COST */
+.cc-row{display:flex;align-items:center;gap:.5rem;padding:.35rem .75rem;border-bottom:1px solid rgba(42,42,42,.2)}
+.cc-row:last-child{border-bottom:none}
+.cc-name{flex:1;font-size:.72rem;font-weight:500}
+.cc-count{font-size:.62rem;color:var(--t2);width:50px}
+
+/* SHIPPING */
+.ship-status{display:inline-flex;align-items:center;gap:.2rem;padding:.1rem .35rem;border-radius:10px;font-size:.58rem;font-weight:600}
+.ship-new{background:var(--bld);color:var(--bl)}.ship-shipped{background:var(--pd);color:var(--p)}.ship-delivered{background:var(--gd);color:var(--g)}.ship-cancelled{background:var(--rd);color:var(--r)}
+
+/* COUPON */
+.coupon-card{background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:.6rem .75rem;margin-bottom:.4rem}
+.coupon-code{font-family:var(--mono);font-size:.75rem;color:var(--acc);font-weight:600}
+.coupon-meta{font-size:.62rem;color:var(--t2);margin-top:.2rem;display:flex;gap:.75rem;flex-wrap:wrap}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;justify-content:center;gap:.2rem;padding:.5rem}
+.pb{background:var(--s2);border:1px solid var(--b1);color:var(--t2);padding:.2rem .4rem;border-radius:3px;font-size:.65rem;cursor:pointer;font-family:var(--mono)}
+.pb.on{background:var(--accd);border-color:var(--acc);color:var(--acc)}.pb:disabled{opacity:.3;cursor:default}
+.pi{font-size:.62rem;color:var(--t3);margin:0 .15rem}
+
+/* MISC */
+.empty{padding:1.25rem;text-align:center;color:var(--t3);font-size:.75rem}
+.ld{padding:1.25rem;text-align:center;color:var(--t2);font-size:.75rem}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--b1);border-top-color:var(--acc);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:.25rem}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* === RESPONSIVE === */
+@media(min-width:640px){
+  .kg{grid-template-columns:repeat(3,1fr)}
+  .psg{grid-template-columns:repeat(3,1fr)}
+  .cg{grid-template-columns:1fr 1fr}
+  .main{padding:1rem}
+  .kv{font-size:1.35rem}
+  .tab{padding:.6rem .85rem;font-size:.72rem}
+}
+@media(min-width:1024px){
+  .kg{grid-template-columns:repeat(4,1fr)}
+  .psg{grid-template-columns:repeat(5,1fr)}
+  .main{padding:1.25rem}
+  .top{padding:0 1.25rem;height:52px}
+  .datebar{padding:.4rem 1.25rem}
+  .tabs{padding:0 1.25rem}
+}
+@media(min-width:1280px){
+  .kg{grid-template-columns:repeat(6,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="s-card">
+    <div class="s-logo">🛒 WooDash Pro</div>
+    <div class="s-sub">Dashboard quản lý & tối ưu store</div>
+    <div class="fg"><label>URL WooCommerce</label><input type="text" id="i-url" placeholder="https://yourstore.com"></div>
+    <div class="fg"><label>Consumer Key</label><input type="text" id="i-ck" placeholder="ck_xxx"></div>
+    <div class="fg"><label>Consumer Secret</label><input type="password" id="i-cs" placeholder="cs_xxx"></div>
+    <div class="s-sect">
+      <div class="s-sect-t">📊 Google Analytics 4 <span class="opt">(tùy chọn)</span></div>
+      <div class="s-sect-d">Kết nối GA4 để lấy Sessions, ATC, Bounce Rate, Traffic Sources tự động</div>
+      <div class="fg"><label>GA4 Property ID</label><input type="text" id="i-gap" placeholder="properties/123456789"></div>
+      <div class="fg"><label>OAuth Client ID</label><input type="text" id="i-gac" placeholder="xxx.apps.googleusercontent.com"></div>
+      <div class="hint">Tạo tại <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a></div>
+    </div>
+    <div class="s-sect">
+      <div class="s-sect-t">📋 Google Sheets Sync <span class="opt">(tùy chọn)</span></div>
+      <div class="s-sect-d">Đồng bộ Ads Spend, COGS, Collection Cost từ Google Sheet. Dữ liệu cập nhật tự động mỗi khi mở dashboard.</div>
+      <div class="fg"><label>Google Sheet URL (Published)</label><input type="text" id="i-gsheet" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv"></div>
+      <div class="hint" style="line-height:1.6">
+        <strong style="color:var(--acc)">Cách tạo:</strong><br>
+        1. Tạo Google Sheet mới với 2 sheet tab:<br>
+        &nbsp;&nbsp;• Sheet <b>"ads"</b> — cột: <code style="color:var(--acc)">date</code> | <code style="color:var(--acc)">spend</code><br>
+        &nbsp;&nbsp;• Sheet <b>"costs"</b> — cột: <code style="color:var(--acc)">collection</code> | <code style="color:var(--acc)">cost</code><br>
+        2. File → Share → Publish to web → chọn "Entire document" + "CSV" → Publish<br>
+        3. Copy link và dán vào đây
+      </div>
+    </div>
+    <button class="btn-main" onclick="doConnect()">Kết nối Dashboard →</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="top">
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <div class="logo">🛒 WooDash</div>
+      <div class="site-b" id="siteb">–</div>
+      <span class="ga-b ga-off" id="gab" onclick="connectGA()" style="display:none">GA4 ✕</span>
+      <span class="ga-b ga-off" id="gsb" onclick="syncSheet()" style="display:none">Sheet ✕</span>
+    </div>
+    <div class="top-r">
+      <button class="rbtn" onclick="exportData()" title="Backup dữ liệu" style="font-size:.65rem">📥</button>
+      <label class="rbtn" title="Khôi phục dữ liệu" style="font-size:.65rem;cursor:pointer">📤<input type="file" accept=".json" onchange="importData(event)" style="display:none"></label>
+      <button class="rbtn" onclick="refreshAll()" title="Làm mới">↻</button>
+      <button class="dbtn" onclick="doDisconnect()" title="Ngắt kết nối">✕</button>
+    </div>
+  </div>
+
+  <div class="datebar">
+    <button class="db" onclick="setR('today',this)">Hôm nay</button>
+    <button class="db on" onclick="setR('7d',this)">7N</button>
+    <button class="db" onclick="setR('30d',this)">30N</button>
+    <button class="db" onclick="setR('90d',this)">90N</button>
+    <button class="db" onclick="setR('all',this)">Tất cả</button>
+    <span class="dsep">|</span>
+    <input type="date" class="di" id="df" onchange="setCR()">
+    <span class="dsep">→</span>
+    <input type="date" class="di" id="dt" onchange="setCR()">
+    <label class="cmp-toggle"><input type="checkbox" id="cmp-chk" onchange="toggleCompare()"> So sánh kỳ trước</label>
+  </div>
+
+  <div class="tabs" id="mtabs">
+    <div class="tab on" onclick="go('overview')">Tổng quan</div>
+    <div class="tab" onclick="go('orders')">Đơn hàng</div>
+    <div class="tab" onclick="go('products')">Sản phẩm</div>
+    <div class="tab" onclick="go('customers')">Khách hàng</div>
+    <div class="tab" onclick="go('conversion')">Chuyển đổi</div>
+    <div class="tab" onclick="go('profit')">Lợi nhuận</div>
+    <div class="tab" onclick="go('shipping')">Vận chuyển</div>
+    <div class="tab" onclick="go('coupons')">Coupon</div>
+  </div>
+
+  <div class="main">
+    <div class="pane on" id="p-overview"><div class="kg" id="k-ov"></div><div class="cg" id="cg-ov"></div><div class="cd" id="ga-sec" style="display:none"><div class="ch"><div class="ct">📊 GA4</div></div><div class="cb"><div class="kg" id="k-ga"></div></div></div><div class="cd"><div class="ch"><div class="ct">Đơn hàng gần đây</div><button class="ca" onclick="go('orders')">Xem tất cả →</button></div><div id="r-orders"></div></div></div>
+
+    <div class="pane" id="p-orders"><div class="cd"><div class="ch"><div class="ct">Đơn hàng</div><div class="tbar"><input class="si" type="text" id="o-q" placeholder="🔍 Tìm..." oninput="fOrders()"><div class="pf"><span class="pl on" onclick="fSt('all',this)">Tất cả</span><span class="pl" onclick="fSt('processing',this)">Xử lý</span><span class="pl" onclick="fSt('completed',this)">Xong</span><span class="pl" onclick="fSt('pending',this)">Chờ</span><span class="pl" onclick="fSt('cancelled',this)">Hủy</span></div></div></div><div class="tb-scroll" id="o-tb"></div><div class="pag" id="o-pg"></div></div></div>
+
+    <div class="pane" id="p-products"><div class="kg" id="k-prod"></div><div class="cd"><div class="ch"><div class="ct">Top 10 bán chạy</div></div><div id="top10"></div></div><div class="cd" style="margin-top:var(--gap)"><div class="ch"><div class="ct">Sản phẩm</div><div class="tbar"><input class="si" type="text" id="pd-q" placeholder="🔍 Tìm SP..." oninput="fProds()"><select id="pd-t" onchange="fProds()"><option value="all">Tất cả loại</option><option value="simple">Simple</option><option value="variable">Variable</option></select><select id="pd-s" onchange="fProds()"><option value="all">Tất cả</option><option value="publish">Đang bán</option><option value="draft">Nháp</option></select></div></div><div class="tb-scroll" id="pd-tb"></div><div class="pag" id="pd-pg"></div></div></div>
+
+    <div class="pane" id="p-customers"><div class="kg" id="k-cust"></div><div style="margin-bottom:var(--gap)"><input class="si" type="text" id="cu-q" placeholder="🔍 Tìm KH..." oninput="fCusts()" style="width:220px"></div><div class="custg" id="cu-g"></div></div>
+
+    <div class="pane" id="p-conversion"><div style="margin-bottom:var(--gap)"><p style="font-size:.72rem;color:var(--t2);margin-bottom:.4rem">Dữ liệu từ GA4 (nếu kết nối) hoặc nhập thủ công.</p><div class="tbar" id="conv-manual"><label style="font-size:.65rem;margin:0">Sessions:</label><input type="number" class="ie" id="in-ss" placeholder="0" style="width:80px" oninput="calcConv()"><label style="font-size:.65rem;margin:0">ATC:</label><input type="number" class="ie" id="in-atc" placeholder="0" style="width:80px" oninput="calcConv()"><button class="btn-sm btn-a" onclick="saveConv()">Lưu</button></div></div><div class="kg" id="k-conv"></div><div class="cd"><div class="ch"><div class="ct">Phễu chuyển đổi</div></div><div class="cb"><div class="fun" id="conv-fun"></div></div></div><div class="cg" style="margin-top:var(--gap)"><div class="cd"><div class="ch"><div class="ct">Purchases theo ngày</div></div><div class="cb"><div class="cw"><canvas id="ch-cr"></canvas></div></div></div><div class="cd"><div class="ch"><div class="ct">Đơn theo giờ</div></div><div class="cb"><div class="cw"><canvas id="ch-hr"></canvas></div></div></div></div><div class="cd" id="ga-traf" style="display:none"><div class="ch"><div class="ct">📊 Nguồn traffic (GA4)</div></div><div class="cb"><div class="cw"><canvas id="ch-traf"></canvas></div></div></div></div>
+
+    <div class="pane" id="p-profit"><div class="psg" id="pf-kpis"></div><div class="cg"><div class="cd"><div class="ch"><div class="ct">Ads Spend theo ngày <span id="ads-sync-badge" style="font-size:.55rem;color:var(--g);display:none">📋 Từ Google Sheet</span></div><div style="display:flex;gap:.3rem"><button class="btn-sm btn-o" onclick="syncSheet().then(()=>renderProfit())" id="ads-sync-btn" style="display:none">↻ Sync</button><button class="btn-sm btn-a" onclick="saveAds()">Lưu</button></div></div><div class="cb" id="ads-w" style="max-height:260px;overflow-y:auto"></div></div><div class="cd"><div class="ch"><div class="ct">Cost theo Collection <span id="cost-sync-badge" style="font-size:.55rem;color:var(--g);display:none">📋 Từ Google Sheet</span></div><button class="btn-sm btn-a" onclick="saveColCosts()">Lưu</button></div><div class="cb" id="col-cost-w"></div></div></div><div class="cd"><div class="ch"><div class="ct">COGS sản phẩm</div><div class="hint">Cost riêng → nhấn Enter. Không có → dùng Cost Collection.</div></div><div class="tb-scroll" id="cogs-tb"></div></div><div class="cg" style="margin-top:var(--gap)"><div class="cd"><div class="ch"><div class="ct">Cơ cấu chi phí</div></div><div class="cb"><div class="cw"><canvas id="ch-pie"></canvas></div></div></div><div class="cd"><div class="ch"><div class="ct">Revenue vs Cost</div></div><div class="cb"><div class="cw"><canvas id="ch-rcb"></canvas></div></div></div></div></div>
+
+    <div class="pane" id="p-shipping"><div class="kg" id="k-ship"></div><div class="cd"><div class="ch"><div class="ct">Theo dõi vận chuyển</div><div class="tbar"><select id="sh-f" onchange="renderShipping()"><option value="all">Tất cả</option><option value="unfulfilled">Chưa gửi</option><option value="shipped">Đã gửi</option><option value="completed">Đã giao</option></select></div></div><div class="tb-scroll" id="sh-tb"></div></div></div>
+
+    <div class="pane" id="p-coupons"><div class="kg" id="k-coup"></div><div class="cd"><div class="ch"><div class="ct">Phân tích Coupon</div></div><div class="cb" id="coup-list"></div></div><div class="cg" style="margin-top:var(--gap)"><div class="cd"><div class="ch"><div class="ct">Doanh thu: Coupon vs Không Coupon</div></div><div class="cb"><div class="cw"><canvas id="ch-coup"></canvas></div></div></div><div class="cd"><div class="ch"><div class="ct">Top Coupon theo doanh thu</div></div><div class="cb"><div class="cw"><canvas id="ch-coup-top"></canvas></div></div></div></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════
+// STATE
+// ═══════════════════════════════
+let U='',CK='',CS='',GAP='',GAC='',GAT='',GSU='';
+let O=[],C=[],P=[];
+let ga=null;
+let DR='7d',CF='',CT='',comparePrev=false;
+let SF='all',OP=1,PP=1;const PG=20;
+let cogs={},colCosts={},dAds={},conv={ss:0,atc:0};
+let ch={};
+const COLLECTIONS=['AOP T-shirt','AOP Hat','Bomber','Hoodie','Polo','Tank Top','Sweatshirt','Shorts','Sneakers','Other'];
+
+// ═══════════════════════════════
+// CONNECT
+// ═══════════════════════════════
+function showErr(m){const e=document.getElementById('err');e.textContent=m;e.style.display='block';}
+
+async function doConnect(){
+  U=document.getElementById('i-url').value.trim().replace(/\/$/,'');
+  CK=document.getElementById('i-ck').value.trim();
+  CS=document.getElementById('i-cs').value.trim();
+  if(!U||!CK||!CS){showErr('Điền đầy đủ thông tin.');return;}
+  document.querySelector('.btn-main').textContent='Đang kết nối...';
+  document.getElementById('err').style.display='none';
+  GAP=document.getElementById('i-gap').value.trim();
+  GAC=document.getElementById('i-gac').value.trim();
+  GSU=document.getElementById('i-gsheet').value.trim();
+  try{
+    await woo('/wp-json/wc/v3/orders?per_page=1');
+    ['u','ck','cs','gap','gac','gsu'].forEach((k,i)=>sessionStorage.setItem('w_'+k,[U,CK,CS,GAP,GAC,GSU][i]));
+    loadLoc();initDates();
+    document.getElementById('siteb').textContent=new URL(U).hostname;
+    document.getElementById('setup').style.display='none';
+    document.getElementById('app').style.display='block';
+    if(GAP&&GAC)document.getElementById('gab').style.display='inline';
+    if(GSU)document.getElementById('gsb').style.display='inline';
+    if(GSU)await syncSheet();
+    loadAll();
+  }catch(e){showErr('Lỗi: '+(e.message||'Kiểm tra URL/key'));document.querySelector('.btn-main').textContent='Kết nối Dashboard →';}
+}
+
+function doDisconnect(){sessionStorage.clear();O=[];C=[];P=[];ga=null;document.getElementById('app').style.display='none';document.getElementById('setup').style.display='flex';document.querySelector('.btn-main').textContent='Kết nối Dashboard →';}
+
+// LOCAL
+function sk(){return 'w3_'+(U?new URL(U).hostname:'');}
+function loadLoc(){try{const k=sk();cogs=JSON.parse(localStorage.getItem(k+'_cogs')||'{}');colCosts=JSON.parse(localStorage.getItem(k+'_cc')||'{}');dAds=JSON.parse(localStorage.getItem(k+'_ads')||'{}');conv=JSON.parse(localStorage.getItem(k+'_conv')||'{"ss":0,"atc":0}');}catch(e){cogs={};colCosts={};dAds={};conv={ss:0,atc:0};}}
+function sav(s,d){try{localStorage.setItem(sk()+s,JSON.stringify(d));}catch(e){}}
+
+// API
+async function woo(p){const s=p.includes('?')?'&':'?';const r=await fetch(U+p+s+'consumer_key='+encodeURIComponent(CK)+'&consumer_secret='+encodeURIComponent(CS));if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||'HTTP '+r.status);}return r.json();}
+async function wooAll(p,mx=5){let a=[],pg=1;while(pg<=mx){const d=await woo(p+(p.includes('?')?'&':'?')+'per_page=100&page='+pg);if(!d.length)break;a=a.concat(d);if(d.length<100)break;pg++;}return a;}
+
+// GA4
+function connectGA(){
+  if(!GAC||!GAP)return;
+  try{google.accounts.oauth2.initTokenClient({client_id:GAC,scope:'https://www.googleapis.com/auth/analytics.readonly',callback:async(r)=>{if(r.error)return;GAT=r.access_token;document.getElementById('gab').className='ga-b ga-on';document.getElementById('gab').textContent='GA4 ✓';document.getElementById('gab').onclick=null;await fetchGA();renderOverview();renderConversion();}}).requestAccessToken();}catch(e){console.error(e);}
+}
+
+async function fetchGA(){
+  if(!GAT)return;
+  const dr=drStr(),pid=GAP.replace('properties/','');
+  try{
+    const b={dateRanges:[{startDate:dr.f,endDate:dr.t}],metrics:[{name:'sessions'},{name:'activeUsers'},{name:'newUsers'},{name:'addToCarts'},{name:'checkouts'},{name:'ecommercePurchases'},{name:'bounceRate'},{name:'averageSessionDuration'},{name:'screenPageViews'}]};
+    const r=await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${pid}:runReport`,{method:'POST',headers:{'Authorization':'Bearer '+GAT,'Content-Type':'application/json'},body:JSON.stringify(b)});
+    const d=await r.json();
+    if(d.rows?.[0]){const v=d.rows[0].metricValues.map(x=>parseFloat(x.value));ga={ss:v[0],au:v[1],nu:v[2],atc:v[3],co:v[4],pu:v[5],br:v[6],asd:v[7],pv:v[8]};}
+    const b2={dateRanges:[{startDate:dr.f,endDate:dr.t}],dimensions:[{name:'sessionDefaultChannelGroup'}],metrics:[{name:'sessions'},{name:'conversions'}],orderBys:[{metric:{metricName:'sessions'},desc:true}],limit:'8'};
+    const r2=await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${pid}:runReport`,{method:'POST',headers:{'Authorization':'Bearer '+GAT,'Content-Type':'application/json'},body:JSON.stringify(b2)});
+    const d2=await r2.json();
+    if(d2.rows)ga.traf=d2.rows.map(r=>({ch:r.dimensionValues[0].value,ss:parseInt(r.metricValues[0].value),cv:parseInt(r.metricValues[1].value)}));
+  }catch(e){console.error('GA4:',e);}
+}
+
+// GOOGLE SHEETS SYNC
+async function syncSheet(){
+  if(!GSU)return;
+  try{
+    // Parse the published URL to get spreadsheet ID
+    const match=GSU.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if(!match){console.error('Invalid Sheet URL');return;}
+    const sheetId=match[1];
+
+    // Fetch "ads" sheet
+    try{
+      const adsUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=ads`;
+      const adsRes=await fetch(adsUrl);
+      const adsCsv=await adsRes.text();
+      const adsData=Papa.parse(adsCsv,{header:true,skipEmptyLines:true});
+      if(adsData.data?.length){
+        adsData.data.forEach(row=>{
+          // Support date formats: YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY
+          let dateStr=row.date||row.Date||row.DATE||'';
+          const spend=parseFloat(row.spend||row.Spend||row.SPEND||row.ads||row.Ads||0);
+          if(dateStr&&spend){
+            // Try to normalize date
+            dateStr=normalizeDate(dateStr);
+            if(dateStr)dAds[dateStr]=spend;
+          }
+        });
+        sav('_ads',dAds);
+      }
+    }catch(e){console.log('No "ads" sheet or error:',e);}
+
+    // Fetch "costs" sheet
+    try{
+      const costUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=costs`;
+      const costRes=await fetch(costUrl);
+      const costCsv=await costRes.text();
+      const costData=Papa.parse(costCsv,{header:true,skipEmptyLines:true});
+      if(costData.data?.length){
+        costData.data.forEach(row=>{
+          const col=row.collection||row.Collection||row.COLLECTION||row.category||row.Category||'';
+          const cost=parseFloat(row.cost||row.Cost||row.COST||0);
+          if(col&&cost)colCosts[col]=cost;
+        });
+        sav('_cc',colCosts);
+      }
+    }catch(e){console.log('No "costs" sheet or error:',e);}
+
+    document.getElementById('gsb').className='ga-b ga-on';
+    document.getElementById('gsb').textContent='Sheet ✓';
+    document.getElementById('gsb').title='Đã đồng bộ Google Sheet';
+    // Show sync badges in profit tab
+    const ab=document.getElementById('ads-sync-badge');if(ab)ab.style.display='inline';
+    const cb=document.getElementById('cost-sync-badge');if(cb)cb.style.display='inline';
+    const asb=document.getElementById('ads-sync-btn');if(asb)asb.style.display='inline-block';
+  }catch(e){
+    console.error('Sheet sync error:',e);
+    document.getElementById('gsb').className='ga-b ga-off';
+    document.getElementById('gsb').textContent='Sheet ✕';
+  }
+}
+
+function normalizeDate(s){
+  // YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // DD/MM/YYYY
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)){
+    const p=s.split('/');
+    return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+  }
+  // MM/DD/YYYY
+  if(/^\d{1,2}-\d{1,2}-\d{4}$/.test(s)){
+    const p=s.split('-');
+    return p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');
+  }
+  // Try Date parse
+  try{const d=new Date(s);if(!isNaN(d))return d.toISOString().slice(0,10);}catch(e){}
+  return '';
+}
+
+// DATES
+function initDates(){const t=new Date(),f=new Date(t-6*864e5);document.getElementById('df').value=f.toISOString().slice(0,10);document.getElementById('dt').value=t.toISOString().slice(0,10);}
+function setR(r,el){DR=r;CF='';CT='';document.querySelectorAll('.datebar .db').forEach(b=>b.classList.remove('on'));if(el)el.classList.add('on');onDR();}
+function setCR(){CF=document.getElementById('df').value;CT=document.getElementById('dt').value;if(!CF||!CT)return;DR='custom';document.querySelectorAll('.datebar .db').forEach(b=>b.classList.remove('on'));onDR();}
+function toggleCompare(){comparePrev=document.getElementById('cmp-chk').checked;renderOverview();}
+async function onDR(){if(GAT)await fetchGA();renderOverview();renderConversion();renderProfit();}
+
+function drStr(){const t=new Date(),fm=d=>d.toISOString().slice(0,10);if(CF&&CT)return{f:CF,t:CT};if(DR==='today')return{f:fm(t),t:fm(t)};if(DR==='7d')return{f:fm(new Date(t-6*864e5)),t:fm(t)};if(DR==='30d')return{f:fm(new Date(t-29*864e5)),t:fm(t)};if(DR==='90d')return{f:fm(new Date(t-89*864e5)),t:fm(t)};return{f:'2020-01-01',t:fm(t)};}
+function nDays(){const d=drStr();return Math.max(1,Math.round((new Date(d.t)-new Date(d.f))/864e5)+1);}
+function gF(){if(DR==='all'&&!CF)return O;const d=drStr(),f=new Date(d.f+'T00:00:00'),t=new Date(d.t+'T23:59:59');return O.filter(o=>{const dt=new Date(o.date_created);return dt>=f&&dt<=t;});}
+function gFPrev(){const days=nDays(),d=drStr(),t=new Date(d.f+'T00:00:00'),f=new Date(t-days*864e5);return O.filter(o=>{const dt=new Date(o.date_created);return dt>=f&&dt<t;});}
+
+// LOAD
+async function loadAll(){
+  ['r-orders','o-tb','top10','pd-tb','cu-g','sh-tb'].forEach(id=>sL(id));
+  await Promise.all([loadO(),loadP(),loadC()]);
+  renderOverview();renderOrdersTab();renderProductsTab();renderCustomersTab();renderConversion();renderProfit();renderShipping();renderCoupons();
+}
+async function refreshAll(){O=[];C=[];P=[];if(GAT)await fetchGA();if(GSU)await syncSheet();await loadAll();}
+async function loadO(){try{O=await wooAll('/wp-json/wc/v3/orders');}catch(e){}}
+async function loadP(){try{P=await wooAll('/wp-json/wc/v3/products');}catch(e){}}
+async function loadC(){try{C=await wooAll('/wp-json/wc/v3/customers');}catch(e){}}
+
+// ═══════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════
+function renderOverview(){
+  const os=gF(),cur=O[0]?.currency_symbol||'$';
+  const done=os.filter(o=>o.status==='completed'||o.status==='processing');
+  const rev=done.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const cnt=done.length,aov=cnt?rev/cnt:0;
+  const pend=os.filter(o=>o.status==='processing'||o.status==='pending').length;
+  const refAmt=os.filter(o=>o.status==='refunded').reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const refRate=os.length?(os.filter(o=>o.status==='refunded').length/os.length*100):0;
+  const items=done.reduce((s,o)=>s+(o.line_items||[]).reduce((a,i)=>a+i.quantity,0),0);
+  const emails=new Set(done.map(o=>o.billing?.email).filter(Boolean));
+  const rpc=emails.size?rev/emails.size:0;
+  const days=nDays(),rpd=rev/days,opd=cnt/days;
+
+  let cmpHtml='';
+  if(comparePrev){
+    const prev=gFPrev();const pDone=prev.filter(o=>o.status==='completed'||o.status==='processing');
+    const pRev=pDone.reduce((s,o)=>s+parseFloat(o.total||0),0);
+    const pCnt=pDone.length;
+    cmpHtml=`<div class="ks">${trend(rev,pRev)} vs kỳ trước</div>`;
+  }
+
+  document.getElementById('k-ov').innerHTML=`
+    <div class="kc"><div class="kl">Doanh thu</div><div class="kv c-acc">${cur}${fE(rev)}</div><div class="ks">${cnt} đơn${comparePrev?' · '+cmpHtml:''}</div><div class="ki">💰</div></div>
+    <div class="kc"><div class="kl">Tổng đơn</div><div class="kv">${os.length}</div><div class="ks">${pend} chờ xử lý</div><div class="ki">📦</div></div>
+    <div class="kc"><div class="kl">AOV</div><div class="kv">${cur}${fE(aov)}</div><div class="ks">${items?((items/cnt).toFixed(1)):0} SP/đơn</div><div class="ki">📊</div></div>
+    <div class="kc"><div class="kl">Revenue/KH</div><div class="kv c-cy">${cur}${fE(rpc)}</div><div class="ks">${emails.size} KH</div><div class="ki">🎯</div></div>
+    <div class="kc"><div class="kl">Hoàn tiền</div><div class="kv c-r">${cur}${fE(refAmt)}</div><div class="ks">${refRate.toFixed(1)}%</div><div class="ki">↩️</div></div>
+    <div class="kc"><div class="kl">DT/ngày</div><div class="kv c-p">${cur}${fE(rpd)}</div><div class="ks">${opd.toFixed(1)} đơn/ngày</div><div class="ki">📈</div></div>`;
+
+  if(ga){
+    document.getElementById('ga-sec').style.display='block';
+    const cr=ga.ss?(ga.pu/ga.ss*100):0;
+    document.getElementById('k-ga').innerHTML=`
+      <div class="kc"><div class="kl">Sessions</div><div class="kv c-bl">${fN(ga.ss)}</div><div class="ks">${fN(ga.pv)} PV</div></div>
+      <div class="kc"><div class="kl">Users</div><div class="kv">${fN(ga.au)}</div><div class="ks">${fN(ga.nu)} mới</div></div>
+      <div class="kc"><div class="kl">Bounce Rate</div><div class="kv c-r">${(ga.br*100).toFixed(1)}%</div></div>
+      <div class="kc"><div class="kl">CR (GA4)</div><div class="kv c-g">${cr.toFixed(2)}%</div></div>`;
+  }
+
+  // Charts
+  const gd=groupDate(done);
+  document.getElementById('cg-ov').innerHTML=`
+    <div class="cd"><div class="ch"><div class="ct">Doanh thu</div></div><div class="cb"><div class="cw"><canvas id="ch-rev"></canvas></div></div></div>
+    <div class="cd"><div class="ch"><div class="ct">Đơn hàng</div></div><div class="cb"><div class="cw"><canvas id="ch-od"></canvas></div></div></div>
+    <div class="cd"><div class="ch"><div class="ct">Trạng thái</div></div><div class="cb"><div class="cw"><canvas id="ch-st"></canvas></div></div></div>
+    <div class="cd"><div class="ch"><div class="ct">Top 5 SP</div></div><div class="cb"><div class="cw"><canvas id="ch-t5"></canvas></div></div></div>`;
+  setTimeout(()=>{
+    mkChart('ch-rev','line',gd,d=>d.l,d=>d.t,'DT','#f59e0b','rgba(245,158,11,.08)',v=>cur+fS(v));
+    mkChart('ch-od','bar',groupDate(os),d=>d.l,d=>d.c,'Đơn','rgba(59,130,246,.6)',null,null,1);
+    mkSt();mkT5();
+  },50);
+  renderRecent();
+}
+
+function trend(cur,prev){if(!prev)return '';const pct=((cur-prev)/prev*100);return `<span class="ktrend ${pct>=0?'kup':'kdn'}">${pct>=0?'↑':'↓'}${Math.abs(pct).toFixed(1)}%</span>`;}
+
+function mkSt(){const c={};gF().forEach(o=>c[o.status]=(c[o.status]||0)+1);dCh('ch-st');ch['ch-st']=new Chart(document.getElementById('ch-st'),{type:'doughnut',data:{labels:Object.keys(c).map(stL),datasets:[{data:Object.values(c),backgroundColor:Object.keys(c).map(stC),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#8a8a8a',font:{size:8},padding:5,usePointStyle:true,pointStyleWidth:6}}}}});}
+
+function mkT5(){const ps={};gF().filter(o=>o.status==='completed'||o.status==='processing').forEach(o=>(o.line_items||[]).forEach(i=>{if(!ps[i.name])ps[i.name]=0;ps[i.name]+=i.quantity;}));const s=Object.entries(ps).sort((a,b)=>b[1]-a[1]).slice(0,5);dCh('ch-t5');ch['ch-t5']=new Chart(document.getElementById('ch-t5'),{type:'bar',data:{labels:s.map(x=>tr(x[0],16)),datasets:[{data:s.map(x=>x[1]),backgroundColor:'rgba(245,158,11,.5)',borderRadius:3,maxBarThickness:20}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:8},stepSize:1}},y:{grid:{display:false},ticks:{color:'#8a8a8a',font:{size:8}}}}}});}
+
+function renderRecent(){const cur=O[0]?.currency_symbol||'$';document.getElementById('r-orders').innerHTML=oHTML(O.slice(0,6),cur);}
+
+// ═══════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════
+function mkChart(id,type,data,lf,vf,lb,col,bg,tf,ss){dCh(id);ch[id]=new Chart(document.getElementById(id),{type,data:{labels:data.map(lf),datasets:[{label:lb,data:data.map(vf),borderColor:col,backgroundColor:bg||col,fill:!!bg,tension:.3,pointRadius:1.5,borderWidth:1.5,borderRadius:type==='bar'?3:0,maxBarThickness:20}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>tf?tf(c.raw):c.raw}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:8}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:8},callback:tf||undefined,stepSize:ss||undefined}}}}});}
+function dCh(id){if(ch[id]){ch[id].destroy();delete ch[id];}}
+function groupDate(os){const days=nDays(),m={};for(let i=days-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);m[k]={l:d.getDate()+'/'+(d.getMonth()+1),t:0,c:0};}os.forEach(o=>{const k=(o.date_created||'').slice(0,10);if(m[k]){m[k].t+=parseFloat(o.total||0);m[k].c++;}});return Object.values(m);}
+
+// ═══════════════════════════════
+// ORDERS
+// ═══════════════════════════════
+function renderOrdersTab(){fOrders();}
+function fOrders(){const q=(document.getElementById('o-q')?.value||'').toLowerCase();const f=O.filter(o=>(SF==='all'||o.status===SF)&&(!q||String(o.id).includes(q)||oNum(o).toLowerCase().includes(q)||((o.billing?.first_name||'')+' '+(o.billing?.last_name||'')).toLowerCase().includes(q)||(o.billing?.email||'').toLowerCase().includes(q)));const cur=O[0]?.currency_symbol||'$';const s=(OP-1)*PG;document.getElementById('o-tb').innerHTML=oHTML(f.slice(s,s+PG),cur);mkPag('o-pg',f.length,PG,OP,p=>{OP=p;fOrders();});}
+function fSt(s,el){SF=s;OP=1;document.querySelectorAll('#p-orders .pl').forEach(p=>p.classList.remove('on'));el.classList.add('on');fOrders();}
+
+function oHTML(list,cur){
+  if(!list.length)return '<div class="empty">Không có đơn hàng</div>';
+  return `<table><thead><tr><th>Mã</th><th>KH</th><th>SP</th><th>TT</th><th>Tiền</th><th>Ngày</th></tr></thead><tbody>${list.map(o=>`<tr><td><div class="oid">${oNum(o)}</div></td><td><div style="font-weight:500;font-size:.7rem">${o.billing?.first_name||''} ${o.billing?.last_name||''}</div><div style="font-size:.58rem;color:var(--t2)">${o.billing?.email||''}</div></td><td style="font-size:.62rem;color:var(--t2);max-width:140px">${(o.line_items||[]).slice(0,2).map(i=>'<div>•'+tr(i.name,24)+' ×'+i.quantity+'</div>').join('')}${(o.line_items?.length>2)?'<div style="color:var(--t3)">+'+(o.line_items.length-2)+'</div>':''}</td><td><span class="sb s${o.status[0]}">${stL(o.status)}</span></td><td><div class="am amh">${cur}${fE(parseFloat(o.total||0))}</div>${o.coupon_lines?.length?'<div style="font-size:.55rem;color:var(--p)">🎫 '+o.coupon_lines.map(c=>c.code).join(', ')+'</div>':''}</td><td style="color:var(--t2);font-size:.62rem">${fD(o.date_created)}</td></tr>`).join('')}</tbody></table>`;}
+
+// ═══════════════════════════════
+// PRODUCTS
+// ═══════════════════════════════
+function renderProductsTab(){
+  const pub=P.filter(p=>p.status==='publish').length;const oos=P.filter(p=>p.stock_status==='outofstock').length;
+  document.getElementById('k-prod').innerHTML=`<div class="kc"><div class="kl">Tổng SP</div><div class="kv">${P.length}</div><div class="ks">${pub} đang bán</div></div><div class="kc"><div class="kl">Hết hàng</div><div class="kv c-r">${oos}</div></div>`;
+  renderTop10();fProds();
+}
+
+function renderTop10(){
+  const ps={};O.filter(o=>o.status==='completed'||o.status==='processing').forEach(o=>(o.line_items||[]).forEach(i=>{const k=i.product_id;if(!ps[k])ps[k]={n:i.name,q:0,r:0,id:k};ps[k].q+=i.quantity;ps[k].r+=parseFloat(i.total||0);}));
+  const sorted=Object.values(ps).sort((a,b)=>b.q-a.q).slice(0,10);const mx=sorted[0]?.q||1,cur=O[0]?.currency_symbol||'$';
+  if(!sorted.length){document.getElementById('top10').innerHTML='<div class="empty">Chưa có dữ liệu</div>';return;}
+  document.getElementById('top10').innerHTML=sorted.map((p,i)=>{const prod=P.find(x=>x.id===p.id);const img=prod?.images?.[0]?.src||'';const cats=(prod?.categories||[]).map(c=>c.name).join(', ')||'–';return `<div class="pr"><div class="prk">${String(i+1).padStart(2,'0')}</div>${img?`<img class="pri" src="${img}">`:'<div class="pri"></div>'}<div class="prn"><div class="prn-t">${p.n}</div><div class="prn-m">${cats} · ${cur}${fE(p.r)}</div></div><div class="prb"><div class="prb-bg"><div class="prb-f" style="width:${Math.round(p.q/mx*100)}%"></div></div></div><div class="prq">${p.q}<small>bán</small></div></div>`;}).join('');
+}
+
+function fProds(){
+  const q=(document.getElementById('pd-q')?.value||'').toLowerCase();const tf=document.getElementById('pd-t')?.value||'all';const sf=document.getElementById('pd-s')?.value||'all';
+  const f=P.filter(p=>(!q||p.name.toLowerCase().includes(q)||String(p.id).includes(q)||(p.sku||'').toLowerCase().includes(q))&&(tf==='all'||p.type===tf)&&(sf==='all'||p.status===sf));
+  const cur=O[0]?.currency_symbol||'$',s=(PP-1)*PG,pg=f.slice(s,s+PG);
+  if(!pg.length){document.getElementById('pd-tb').innerHTML='<div class="empty">Không tìm thấy</div>';return;}
+  document.getElementById('pd-tb').innerHTML=`<table><thead><tr><th></th><th>SP</th><th>SKU</th><th>Giá</th><th>Kho</th><th>TT</th></tr></thead><tbody>${pg.map(p=>{const img=p.images?.[0]?.src||'';const stk=p.stock_quantity!==null?p.stock_quantity:(p.stock_status==='instock'?'✓':'✕');return `<tr><td>${img?`<img src="${img}" style="width:26px;height:26px;border-radius:3px;object-fit:cover">`:'<div style="width:26px;height:26px;background:var(--s3);border-radius:3px"></div>'}</td><td><div style="font-weight:500;font-size:.7rem">${tr(p.name,32)}</div><div style="font-size:.55rem;color:var(--t3)">ID:${p.id}</div></td><td style="font-family:var(--mono);font-size:.65rem;color:var(--t2)">${p.sku||'–'}</td><td class="am">${cur}${p.price||'0'}</td><td style="font-size:.7rem;${p.stock_status==='outofstock'?'color:var(--r)':''}">${stk}</td><td><span class="sb ${p.status==='publish'?'sc':'sw'}">${p.status==='publish'?'Bán':p.status}</span></td></tr>`;}).join('')}</tbody></table>`;
+  mkPag('pd-pg',f.length,PG,PP,p=>{PP=p;fProds();});
+}
+
+// ═══════════════════════════════
+// CUSTOMERS
+// ═══════════════════════════════
+function renderCustomersTab(){
+  const oe={};O.forEach(o=>{const e=o.billing?.email;if(e)oe[e]=(oe[e]||0)+1;});
+  const rep=Object.values(oe).filter(c=>c>1).length;
+  document.getElementById('k-cust').innerHTML=`<div class="kc"><div class="kl">Tổng KH</div><div class="kv">${C.length}</div></div><div class="kc"><div class="kl">Mới (1 đơn)</div><div class="kv c-g">${Object.values(oe).filter(c=>c===1).length}</div></div><div class="kc"><div class="kl">Quay lại</div><div class="kv c-bl">${rep}</div><div class="ks">${Object.keys(oe).length?(rep/Object.keys(oe).length*100).toFixed(1):0}%</div></div>`;
+  fCusts();
+}
+function fCusts(){
+  const q=(document.getElementById('cu-q')?.value||'').toLowerCase();
+  const list=C.filter(c=>!q||(c.first_name+' '+c.last_name).toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q));
+  const oe={};O.forEach(o=>{const e=o.billing?.email;if(!e)return;if(!oe[e])oe[e]={n:0,t:0};oe[e].n++;oe[e].t+=parseFloat(o.total||0);});
+  const cur=O[0]?.currency_symbol||'$';
+  if(!list.length){document.getElementById('cu-g').innerHTML='<div class="empty">Không tìm thấy</div>';return;}
+  document.getElementById('cu-g').innerHTML=list.map(c=>{const s=oe[c.email]||{n:0,t:0};const ini=((c.first_name?.[0]||'')+(c.last_name?.[0]||'')).toUpperCase()||'?';return `<div class="custc"><div class="cav">${ini}</div><div class="cn">${c.first_name} ${c.last_name}</div><div class="ce">${c.email}</div><div class="cst"><div><div class="csl">Đơn</div><div class="csv">${s.n}</div></div><div><div class="csl">Chi</div><div class="csv">${cur}${fS(s.t)}</div></div><div><div class="csl">Reg</div><div class="csv" style="font-size:.6rem">${fDs(c.date_created)}</div></div></div></div>`;}).join('');
+}
+
+// ═══════════════════════════════
+// CONVERSION
+// ═══════════════════════════════
+function renderConversion(){
+  document.getElementById('in-ss').value=conv.ss||'';document.getElementById('in-atc').value=conv.atc||'';
+  if(ga){document.getElementById('conv-manual').style.display='none';document.getElementById('ga-traf').style.display='block';renderTraf();}
+  calcConv();renderCR();renderHR();
+}
+function calcConv(){
+  const os=gF(),done=os.filter(o=>o.status==='completed'||o.status==='processing'),pu=done.length;
+  const co=os.filter(o=>o.status!=='failed'&&o.status!=='trash').length;
+  let ss,atc;
+  if(ga){ss=ga.ss;atc=ga.atc;}else{ss=parseInt(document.getElementById('in-ss')?.value)||conv.ss||0;atc=parseInt(document.getElementById('in-atc')?.value)||conv.atc||0;}
+  const crS=ss?(pu/ss*100):0,crA=ss?(atc/ss*100):0,crC=atc?(co/atc*100):0,crP=co?(pu/co*100):0;
+  const rpv=ss?(done.reduce((s,o)=>s+parseFloat(o.total||0),0)/ss):0;const cur=O[0]?.currency_symbol||'$';
+  document.getElementById('k-conv').innerHTML=`
+    <div class="kc"><div class="kl">Sessions</div><div class="kv c-bl">${ss?fN(ss):'–'}</div><div class="ks">${ga?'GA4':'Tay'}</div></div>
+    <div class="kc"><div class="kl">Add to Cart</div><div class="kv">${atc?fN(atc):'–'}</div><div class="ks">${crA.toFixed(2)}%</div></div>
+    <div class="kc"><div class="kl">Checkout</div><div class="kv">${co}</div><div class="ks">${crC.toFixed(2)}%</div></div>
+    <div class="kc"><div class="kl">Purchase</div><div class="kv c-g">${pu}</div><div class="ks">${crP.toFixed(2)}%</div></div>
+    <div class="kc"><div class="kl">CR tổng</div><div class="kv c-acc">${crS.toFixed(2)}%</div></div>
+    <div class="kc"><div class="kl">Rev/Visitor</div><div class="kv c-cy">${cur}${fE(rpv)}</div></div>`;
+  const mx=Math.max(ss||1,atc||1,co||1,pu||1);
+  const steps=[{l:'Sessions',v:ss,p:'100%',c:'#3b82f6'},{l:'ATC',v:atc,p:ss?(atc/ss*100).toFixed(1)+'%':'–',c:'#f59e0b'},{l:'Checkout',v:co,p:atc?(co/atc*100).toFixed(1)+'%':'–',c:'#8b5cf6'},{l:'Purchase',v:pu,p:co?(pu/co*100).toFixed(1)+'%':'–',c:'#10b981'}];
+  document.getElementById('conv-fun').innerHTML=steps.map(s=>{const h=mx?Math.max((s.v/mx)*110,2):2;return `<div class="fus"><div class="fub" style="height:${h}px;width:${65}%;background:${s.c}"></div><div class="fuv">${s.v||'–'}</div><div class="ful">${s.l}</div><div class="fup">${s.p}</div></div>`;}).join('');
+}
+function saveConv(){conv.ss=parseInt(document.getElementById('in-ss').value)||0;conv.atc=parseInt(document.getElementById('in-atc').value)||0;sav('_conv',conv);calcConv();}
+function renderCR(){const gd=groupDate(O.filter(o=>o.status==='completed'||o.status==='processing'));mkChart('ch-cr','line',gd,d=>d.l,d=>d.c,'Purchases','#10b981','rgba(16,185,129,.08)',null,1);}
+function renderHR(){const h=Array(24).fill(0);gF().forEach(o=>{const hr=new Date(o.date_created).getHours();h[hr]++;});dCh('ch-hr');ch['ch-hr']=new Chart(document.getElementById('ch-hr'),{type:'bar',data:{labels:h.map((_,i)=>i+'h'),datasets:[{data:h,backgroundColor:'rgba(139,92,246,.4)',borderRadius:2,maxBarThickness:12}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#555',font:{size:7}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:8},stepSize:1}}}}});}
+function renderTraf(){if(!ga?.traf)return;dCh('ch-traf');ch['ch-traf']=new Chart(document.getElementById('ch-traf'),{type:'bar',data:{labels:ga.traf.map(s=>s.ch),datasets:[{label:'Sessions',data:ga.traf.map(s=>s.ss),backgroundColor:'rgba(59,130,246,.45)',borderRadius:3,maxBarThickness:22},{label:'Conv',data:ga.traf.map(s=>s.cv),backgroundColor:'rgba(16,185,129,.45)',borderRadius:3,maxBarThickness:22}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a8a8a',font:{size:8}}}},scales:{x:{grid:{display:false},ticks:{color:'#8a8a8a',font:{size:8}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:8}}}}}});}
+
+// ═══════════════════════════════
+// PROFIT
+// ═══════════════════════════════
+function renderProfit(){renderAdsDaily();renderColCosts();renderCOGS();recalcProfit();}
+
+function renderAdsDaily(){
+  const days=nDays(),rows=[];
+  for(let i=days-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);rows.push({d:k,l:d.getDate()+'/'+(d.getMonth()+1),s:dAds[k]||0});}
+  const tot=rows.reduce((s,r)=>s+r.s,0);
+  document.getElementById('ads-w').innerHTML=`<table><thead><tr><th>Ngày</th><th>Spend ($)</th></tr></thead><tbody>${rows.map(r=>`<tr><td style="font-size:.68rem;color:var(--t2)">${r.l}</td><td><input class="ie ai" data-d="${r.d}" type="number" step="0.01" value="${r.s||''}" placeholder="0"></td></tr>`).join('')}<tr style="border-top:1px solid var(--b1)"><td style="font-weight:600;font-size:.7rem">Tổng</td><td style="font-weight:700;color:var(--acc);font-family:var(--mono);font-size:.72rem">$${fE(tot)}</td></tr></tbody></table>`;
+}
+function saveAds(){document.querySelectorAll('.ai').forEach(i=>{dAds[i.dataset.d]=parseFloat(i.value)||0;});sav('_ads',dAds);renderAdsDaily();recalcProfit();}
+
+function renderColCosts(){
+  // Get collections from product categories/tags
+  const cols=getCollections();
+  document.getElementById('col-cost-w').innerHTML=cols.map(c=>`<div class="cc-row"><div class="cc-name">${c.name}</div><div class="cc-count">${c.count} SP</div><input class="ie cci" data-col="${c.name}" type="number" step="0.01" value="${colCosts[c.name]||''}" placeholder="0"></div>`).join('')||'<div class="empty">Không có collection</div>';
+}
+function getCollections(){
+  const cats={};
+  P.forEach(p=>(p.categories||[]).forEach(c=>{if(!cats[c.name])cats[c.name]=0;cats[c.name]++;}));
+  // Also add default collections if not present
+  COLLECTIONS.forEach(c=>{if(!cats[c])cats[c]=0;});
+  return Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([n,c])=>({name:n,count:c}));
+}
+function saveColCosts(){document.querySelectorAll('.cci').forEach(i=>{colCosts[i.dataset.col]=parseFloat(i.value)||0;});sav('_cc',colCosts);renderCOGS();recalcProfit();}
+
+function getProductCollection(prodId){
+  const p=P.find(x=>x.id==prodId);
+  return (p?.categories||[]).map(c=>c.name);
+}
+function getProductCost(prodId){
+  if(cogs[prodId])return cogs[prodId];
+  const cols=getProductCollection(prodId);
+  for(const c of cols){if(colCosts[c])return colCosts[c];}
+  return 0;
+}
+
+function renderCOGS(){
+  const ps={};O.filter(o=>o.status==='completed'||o.status==='processing').forEach(o=>(o.line_items||[]).forEach(i=>{const k=i.product_id;if(!ps[k])ps[k]={n:i.name,q:0,r:0,pr:parseFloat(i.price||0),id:k};ps[k].q+=i.quantity;ps[k].r+=parseFloat(i.total||0);}));
+  const sorted=Object.entries(ps).sort((a,b)=>b[1].q-a[1].q);const cur=O[0]?.currency_symbol||'$';
+  if(!sorted.length){document.getElementById('cogs-tb').innerHTML='<div class="empty">Chưa có dữ liệu</div>';return;}
+  document.getElementById('cogs-tb').innerHTML=`<table><thead><tr><th>SP</th><th>Collection</th><th>Bán</th><th>DT</th><th>Cost</th><th>COGS</th><th>Gross</th></tr></thead><tbody>${sorted.map(([id,p])=>{
+    const cols=getProductCollection(id);const colStr=cols.join(', ')||'–';
+    const cost=getProductCost(id);const totalCogs=cost*p.q;const gross=p.r-totalCogs;
+    return `<tr><td style="font-size:.68rem;font-weight:500">${tr(p.n,24)}</td><td style="font-size:.6rem;color:var(--t2)">${tr(colStr,20)}</td><td style="font-family:var(--mono);font-size:.68rem">${p.q}</td><td class="am">${cur}${fE(p.r)}</td><td><input class="ie cgi" data-id="${id}" type="number" step="0.01" value="${cogs[id]||''}" placeholder="${cost||0}" onchange="saveCG(this)" onkeydown="if(event.key==='Enter'){saveCG(this);recalcProfit();}"></td><td class="am" style="color:var(--r)">${cur}${fE(totalCogs)}</td><td class="am" style="color:${gross>=0?'var(--g)':'var(--r)'}">${cur}${fE(gross)}</td></tr>`;}).join('')}</tbody></table>`;
+}
+function saveCG(el){cogs[el.dataset.id]=parseFloat(el.value)||0;sav('_cogs',cogs);}
+
+function recalcProfit(){
+  const os=gF().filter(o=>o.status==='completed'||o.status==='processing');const cur=O[0]?.currency_symbol||'$';
+  const rev=os.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  let tCOGS=0;os.forEach(o=>(o.line_items||[]).forEach(i=>{tCOGS+=getProductCost(i.product_id)*i.quantity;}));
+  const dr=drStr(),f=new Date(dr.f),t=new Date(dr.t);
+  let tAds=0;Object.entries(dAds).forEach(([d,v])=>{const dt=new Date(d);if(dt>=f&&dt<=t)tAds+=v;});
+  const ship=os.reduce((s,o)=>s+parseFloat(o.shipping_total||0),0);
+  const gross=rev-tCOGS,net=gross-tAds;
+  const gm=rev?((gross/rev)*100):0,nm=rev?((net/rev)*100):0;
+  const roas=tAds?(rev/tAds):0,cpa=os.length?(tAds/os.length):0;
+
+  document.getElementById('pf-kpis').innerHTML=`
+    <div class="psb"><div class="lb">Revenue</div><div class="vl c-acc">${cur}${fE(rev)}</div></div>
+    <div class="psb"><div class="lb">COGS</div><div class="vl c-r">${cur}${fE(tCOGS)}</div></div>
+    <div class="psb"><div class="lb">Gross Profit</div><div class="vl" style="color:${gross>=0?'var(--g)':'var(--r)'}">${cur}${fE(gross)}</div></div>
+    <div class="psb"><div class="lb">Gross %</div><div class="vl" style="color:${gm>=0?'var(--g)':'var(--r)'}">${gm.toFixed(1)}%</div></div>
+    <div class="psb"><div class="lb">Ads</div><div class="vl c-r">${cur}${fE(tAds)}</div></div>
+    <div class="psb"><div class="lb">Net Profit</div><div class="vl" style="color:${net>=0?'var(--g)':'var(--r)'}">${cur}${fE(net)}</div></div>
+    <div class="psb"><div class="lb">Net %</div><div class="vl" style="color:${nm>=0?'var(--g)':'var(--r)'}">${nm.toFixed(1)}%</div></div>
+    <div class="psb"><div class="lb">ROAS</div><div class="vl c-bl">${roas.toFixed(2)}x</div></div>
+    <div class="psb"><div class="lb">CPA</div><div class="vl">${cur}${fE(cpa)}</div></div>
+    <div class="psb"><div class="lb">Shipping</div><div class="vl">${cur}${fE(ship)}</div></div>`;
+
+  dCh('ch-pie');ch['ch-pie']=new Chart(document.getElementById('ch-pie'),{type:'doughnut',data:{labels:['COGS','Ads','Net Profit'],datasets:[{data:[tCOGS,tAds,Math.max(net,0)],backgroundColor:['#ef4444','#f59e0b','#10b981'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#8a8a8a',font:{size:8},padding:5,usePointStyle:true}}}}});
+  dCh('ch-rcb');ch['ch-rcb']=new Chart(document.getElementById('ch-rcb'),{type:'bar',data:{labels:['Rev','COGS','Ads','Gross','Net'],datasets:[{data:[rev,tCOGS,tAds,gross,net],backgroundColor:['#f59e0b','#ef4444','#f97316','#10b981',net>=0?'#3b82f6':'#ef4444'],borderRadius:3,maxBarThickness:28}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>cur+fE(c.raw)}}},scales:{x:{grid:{display:false},ticks:{color:'#8a8a8a',font:{size:8}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:8},callback:v=>cur+fS(v)}}}}});
+}
+
+// ═══════════════════════════════
+// SHIPPING
+// ═══════════════════════════════
+function renderShipping(){
+  const os=gF();
+  const statuses={unfulfilled:0,shipped:0,completed:0};
+  os.forEach(o=>{if(o.status==='completed')statuses.completed++;else if(o.status==='processing')statuses.unfulfilled++;else if(o.status==='on-hold')statuses.shipped++;});
+  const total=os.length;
+  document.getElementById('k-ship').innerHTML=`
+    <div class="kc"><div class="kl">Tổng đơn</div><div class="kv">${total}</div></div>
+    <div class="kc"><div class="kl">Chưa gửi</div><div class="kv c-bl">${statuses.unfulfilled}</div></div>
+    <div class="kc"><div class="kl">Đã gửi</div><div class="kv c-p">${statuses.shipped}</div></div>
+    <div class="kc"><div class="kl">Đã giao</div><div class="kv c-g">${statuses.completed}</div></div>`;
+
+  const filter=document.getElementById('sh-f')?.value||'all';
+  let filtered=os;
+  if(filter==='unfulfilled')filtered=os.filter(o=>o.status==='processing');
+  else if(filter==='shipped')filtered=os.filter(o=>o.status==='on-hold');
+  else if(filter==='completed')filtered=os.filter(o=>o.status==='completed');
+
+  const cur=O[0]?.currency_symbol||'$';
+  if(!filtered.length){document.getElementById('sh-tb').innerHTML='<div class="empty">Không có đơn</div>';return;}
+  document.getElementById('sh-tb').innerHTML=`<table><thead><tr><th>Mã</th><th>KH</th><th>Địa chỉ</th><th>Trạng thái</th><th>Tiền</th><th>Ngày</th></tr></thead><tbody>${filtered.slice(0,30).map(o=>{
+    const addr=[o.shipping?.address_1,o.shipping?.city,o.shipping?.state,o.shipping?.country].filter(Boolean).join(', ');
+    const shipSt=o.status==='completed'?'delivered':o.status==='on-hold'?'shipped':'new';
+    const shipLabel={new:'Chưa gửi',shipped:'Đã gửi',delivered:'Đã giao'}[shipSt];
+    return `<tr><td class="oid">${oNum(o)}</td><td style="font-size:.7rem">${o.shipping?.first_name||o.billing?.first_name||''} ${o.shipping?.last_name||o.billing?.last_name||''}</td><td style="font-size:.62rem;color:var(--t2);max-width:160px">${tr(addr,40)}</td><td><span class="ship-status ship-${shipSt}">${shipLabel}</span></td><td class="am amh">${cur}${fE(parseFloat(o.total||0))}</td><td style="font-size:.62rem;color:var(--t2)">${fDs(o.date_created)}</td></tr>`;}).join('')}</tbody></table>`;
+}
+
+// ═══════════════════════════════
+// COUPONS
+// ═══════════════════════════════
+function renderCoupons(){
+  const os=gF();const cur=O[0]?.currency_symbol||'$';
+  const couponOrders=os.filter(o=>o.coupon_lines?.length>0);
+  const noCouponOrders=os.filter(o=>!o.coupon_lines?.length);
+  const cRev=couponOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const ncRev=noCouponOrders.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const cDiscount=couponOrders.reduce((s,o)=>s+parseFloat(o.discount_total||0),0);
+
+  // Group by coupon code
+  const codes={};
+  couponOrders.forEach(o=>{(o.coupon_lines||[]).forEach(c=>{if(!codes[c.code])codes[c.code]={count:0,revenue:0,discount:0};codes[c.code].count++;codes[c.code].revenue+=parseFloat(o.total||0);codes[c.code].discount+=parseFloat(c.discount||0);});});
+  const sortedCodes=Object.entries(codes).sort((a,b)=>b[1].revenue-a[1].revenue);
+
+  document.getElementById('k-coup').innerHTML=`
+    <div class="kc"><div class="kl">Đơn dùng Coupon</div><div class="kv c-p">${couponOrders.length}</div><div class="ks">${os.length?(couponOrders.length/os.length*100).toFixed(1):0}% tổng đơn</div></div>
+    <div class="kc"><div class="kl">DT từ Coupon</div><div class="kv c-acc">${cur}${fE(cRev)}</div></div>
+    <div class="kc"><div class="kl">DT không Coupon</div><div class="kv">${cur}${fE(ncRev)}</div></div>
+    <div class="kc"><div class="kl">Tổng giảm giá</div><div class="kv c-r">${cur}${fE(cDiscount)}</div></div>
+    <div class="kc"><div class="kl">AOV Coupon</div><div class="kv">${cur}${fE(couponOrders.length?cRev/couponOrders.length:0)}</div></div>
+    <div class="kc"><div class="kl">AOV No Coupon</div><div class="kv">${cur}${fE(noCouponOrders.length?ncRev/noCouponOrders.length:0)}</div></div>`;
+
+  document.getElementById('coup-list').innerHTML=sortedCodes.length?sortedCodes.map(([code,d])=>`<div class="coupon-card"><div class="coupon-code">🎫 ${code.toUpperCase()}</div><div class="coupon-meta"><span>${d.count} đơn</span><span>DT: ${cur}${fE(d.revenue)}</span><span>Giảm: ${cur}${fE(d.discount)}</span><span>AOV: ${cur}${fE(d.count?d.revenue/d.count:0)}</span></div></div>`).join(''):'<div class="empty">Không có coupon nào</div>';
+
+  // Charts
+  setTimeout(()=>{
+    dCh('ch-coup');ch['ch-coup']=new Chart(document.getElementById('ch-coup'),{type:'doughnut',data:{labels:['Có Coupon','Không Coupon'],datasets:[{data:[cRev,ncRev],backgroundColor:['#8b5cf6','#3b82f6'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#8a8a8a',font:{size:9},padding:5,usePointStyle:true}}}}});
+    if(sortedCodes.length){dCh('ch-coup-top');ch['ch-coup-top']=new Chart(document.getElementById('ch-coup-top'),{type:'bar',data:{labels:sortedCodes.slice(0,5).map(c=>c[0].toUpperCase()),datasets:[{label:'DT',data:sortedCodes.slice(0,5).map(c=>c[1].revenue),backgroundColor:'rgba(139,92,246,.5)',borderRadius:3,maxBarThickness:22}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:8}}},y:{grid:{display:false},ticks:{color:'#8a8a8a',font:{size:8}}}}}});}
+  },50);
+}
+
+// ═══════════════════════════════
+// PAGINATION
+// ═══════════════════════════════
+function mkPag(id,tot,sz,cur,fn){
+  const pgs=Math.ceil(tot/sz);if(pgs<=1){document.getElementById(id).innerHTML='';return;}
+  let h=`<button class="pb" ${cur===1?'disabled':''}>‹</button>`;
+  for(let i=1;i<=pgs;i++){if(i===1||i===pgs||Math.abs(i-cur)<=1)h+=`<button class="pb ${i===cur?'on':''}">${i}</button>`;else if(Math.abs(i-cur)===2)h+=`<span class="pi">…</span>`;}
+  h+=`<button class="pb" ${cur===pgs?'disabled':''}>›</button><span class="pi">${tot}</span>`;
+  const el=document.getElementById(id);el.innerHTML=h;
+  el.querySelectorAll('.pb').forEach(b=>b.addEventListener('click',function(){const t=this.textContent.trim();if(t==='‹')fn(Math.max(1,cur-1));else if(t==='›')fn(Math.min(pgs,cur+1));else{const n=parseInt(t);if(n)fn(n);}}));
+}
+
+// TABS
+function go(n){const tabs=['overview','orders','products','customers','conversion','profit','shipping','coupons'];document.querySelectorAll('#mtabs .tab').forEach((t,i)=>t.classList.toggle('on',tabs[i]===n));document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+n).classList.add('on');}
+
+// UTILS
+function oNum(o){const m=(o.meta_data||[]).find(m=>m.key==='_val_order_number');return m?'VAL-'+m.value:'#'+o.id;}
+function fE(v){return v?new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v):'0.00';}
+function fS(v){if(v>=1e9)return(v/1e9).toFixed(1)+'B';if(v>=1e6)return(v/1e6).toFixed(1)+'M';if(v>=1e3)return(v/1e3).toFixed(0)+'K';return Math.round(v);}
+function fN(v){return new Intl.NumberFormat('en-US').format(Math.round(v));}
+function fD(s){if(!s)return '–';const d=new Date(s);return d.toLocaleDateString('vi-VN')+' '+d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});}
+function fDs(s){if(!s)return '–';return new Date(s).toLocaleDateString('vi-VN');}
+function tr(s,n){return s&&s.length>n?s.slice(0,n)+'…':s||'';}
+function stL(s){return{processing:'Xử lý',completed:'Xong',pending:'Chờ TT',cancelled:'Hủy','on-hold':'Giữ',refunded:'Hoàn',failed:'Lỗi'}[s]||s;}
+function stC(s){return{processing:'#3b82f6',completed:'#10b981',pending:'#f59e0b',cancelled:'#ef4444','on-hold':'#8b5cf6',refunded:'#6b7280',failed:'#ef4444'}[s]||'#555';}
+function sL(id){const el=document.getElementById(id);if(el)el.innerHTML='<div class="ld"><div class="spin"></div> Đang tải...</div>';}
+
+// EXPORT / IMPORT
+function exportData(){
+  const data={
+    version:'woodash-v3',
+    exported:new Date().toISOString(),
+    site:U?new URL(U).hostname:'unknown',
+    cogs,colCosts,dailyAds:dAds,convInputs:conv
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='woodash-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(data.cogs)cogs=data.cogs;
+      if(data.colCosts)colCosts=data.colCosts;
+      if(data.dailyAds)dAds=data.dailyAds;
+      if(data.convInputs)conv=data.convInputs;
+      sav('_cogs',cogs);
+      sav('_cc',colCosts);
+      sav('_ads',dAds);
+      sav('_conv',conv);
+      alert('✅ Khôi phục dữ liệu thành công!\n\nCOGS: '+Object.keys(cogs).length+' sản phẩm\nCollection Cost: '+Object.keys(colCosts).length+' collections\nAds Spend: '+Object.keys(dAds).length+' ngày\n\nTrang sẽ tự động refresh.');
+      renderProfit();renderConversion();
+    }catch(err){
+      alert('❌ File không hợp lệ. Vui lòng chọn file backup JSON từ WooDash.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+// RESTORE
+window.addEventListener('load',()=>{
+  const u=sessionStorage.getItem('w_u'),ck=sessionStorage.getItem('w_ck'),cs=sessionStorage.getItem('w_cs');
+  if(u&&ck&&cs){U=u;CK=ck;CS=cs;GAP=sessionStorage.getItem('w_gap')||'';GAC=sessionStorage.getItem('w_gac')||'';GSU=sessionStorage.getItem('w_gsu')||'';loadLoc();initDates();document.getElementById('siteb').textContent=new URL(u).hostname;document.getElementById('setup').style.display='none';document.getElementById('app').style.display='block';if(GAP&&GAC)document.getElementById('gab').style.display='inline';if(GSU){document.getElementById('gsb').style.display='inline';syncSheet().then(()=>loadAll());}else{loadAll();}}
+});
+setInterval(refreshAll,5*60*1000);
+</script>
+</body>
+</html>
